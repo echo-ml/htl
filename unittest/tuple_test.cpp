@@ -33,11 +33,13 @@ TEST_CASE("tuple") {
     using R3 = decltype(get<2>(t));
     using R4 = decltype(get<0>(std::move(t)));
     using R5 = decltype(get<2>(std::move(t)));
+    using R6 = decltype(get<2>(ctref));
     CHECK(std::is_same<R1, int&>::value);
     CHECK(std::is_same<R2, const int&>::value);
-    CHECK(std::is_same<R3, std::true_type>::value);
+    CHECK(std::is_same<R3, std::true_type&>::value);
     CHECK(std::is_same<R4, int&&>::value);
-    CHECK(std::is_same<R5, std::true_type>::value);
+    CHECK(std::is_same<R5, std::true_type&&>::value);
+    CHECK(std::is_same<R6, const std::true_type&>::value);
   }
 
   SECTION("traits") {

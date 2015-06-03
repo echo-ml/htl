@@ -2,7 +2,9 @@
 
 #include <type_traits>
 #include <utility>
+#include <echo/concept2.h>
 
+namespace echo {
 // Pack is intended to be used with empty-base-class-optimization, so prevent
 // unwanted ADL it uses a separate and minimal namespace
 namespace empty_base_class_namespace {
@@ -13,31 +15,32 @@ namespace empty_base_class_namespace {
 
 namespace detail {
 
-template<class Tag, class Value, bool IsValueEmpty>
+template <class Tag, class Value, bool IsValueEmpty>
 struct PackBase {};
 
-template<class Tag, class Value>
+template <class Tag, class Value>
 struct PackBase<Tag, Value, true> {
-  PackBase() = default;
+  CONCEPT_MEMBER_REQUIRES(std::is_default_constructible<Value>::value)
+  PackBase() {}
   PackBase(const Value&) {}
-  auto value() const { return Value{}; }
+  Value& value() & { return reinterpret_cast<Value&>(*this); }
+  const Value& value() const & { return reinterpret_cast<const Value&>(*this); }
+  Value&& value() && { return reinterpret_cast<Value&&>(*this); }
 };
 
-template<class Tag, class Value>
+template <class Tag, class Value>
 struct PackBase<Tag, Value, false> {
-  template <bool X = true,
-            std::enable_if_t<X && std::is_default_constructible<Value>::value,
-                             int> = 0>
+  CONCEPT_MEMBER_REQUIRES(std::is_default_constructible<Value>::value)
   PackBase() {}
   PackBase(const Value& value) : _value(value) {}
   PackBase(Value&& value) : _value(std::move(value)) {}
   auto& value() & { return _value; }
-  auto& value() const& { return _value; }
+  auto& value() const & { return _value; }
   auto&& value() && { return std::move(_value); }
+
  private:
   Value _value;
 };
-
 }
 
 //////////
@@ -58,17 +61,17 @@ struct Pack
 // unpack //
 ////////////
 
-template<class Tag, class Value>
+template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>& pack) {
   return pack.value();
 }
 
-template<class Tag, class Value>
+template <class Tag, class Value>
 decltype(auto) unpack(const Pack<Tag, Value>& pack) {
   return pack.value();
 }
 
-template<class Tag, class Value>
+template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>&& pack) {
   return std::move(pack).value();
 }
@@ -83,12 +86,11 @@ decltype(auto) unpack(Pack<Tag, Value>&& pack) {
 // decltype(auto) unpack(Tag, const Pack<Tag, Value>& pack) {
 //   return pack.value();
 // }
-
 }
 
-namespace echo { namespace htl {
+namespace htl {
 
 using empty_base_class_namespace::Pack;
 using empty_base_class_namespace::unpack;
-
-}}
+}
+}
