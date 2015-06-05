@@ -72,34 +72,8 @@ class Tuple
 
 template <class... Values>
 auto make_tuple(Values&&... values)
-    -> decltype(Tuple<uncvref_t<Values>...>(values...)) {
-  return Tuple<uncvref_t<Values>...>(values...);
-}
-
-///////////
-// tuple //
-///////////
-
-namespace concept {
-namespace detail {
-namespace tuple {
-
-template <class>
-struct tuple_impl {
-  static constexpr bool value = false;
-};
-
-template <class... Values>
-struct tuple_impl<Tuple<Values...>> {
-  static constexpr bool value = true;
-};
-}
-}
-
-template <class T>
-constexpr bool tuple() {
-  return detail::tuple::tuple_impl<T>::value;
-}
+    -> decltype(Tuple<uncvref_t<Values>...>(std::forward<Values>(values)...)) {
+  return Tuple<uncvref_t<Values>...>(std::forward<Values>(values)...);
 }
 
 namespace tuple_traits {
