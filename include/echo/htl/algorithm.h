@@ -10,27 +10,85 @@ namespace htl {
 // make_subtuple //
 ///////////////////
 
+template <std::size_t... Indexes, class Tuple_,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple_>>()),
+          CONCEPT_REQUIRES(and_c<(
+              Indexes >= 0 &&
+              Indexes < tuple_traits::num_elements<uncvref_t<Tuple_>>())...>())>
+auto make_subtuple(std::index_sequence<Indexes...> indexes, Tuple_&& tuple)
+    -> decltype(
+        Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+            htl::get<Indexes>(std::forward<Tuple_>(tuple))...)) {
+  return Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+      htl::get<Indexes>(std::forward<Tuple_>(tuple))...);
+}
+
+////////////
+// append //
+////////////
+
 namespace detail {
 namespace algorithm {
-
-template <std::size_t... Indexes, class Tuple>
-auto make_subtuple_impl(std::index_sequence<Indexes...>, Tuple&& tuple)
-    -> decltype(htl::make_tuple(get<Indexes>(std::forward<Tuple>(tuple))...)) {
-  return htl::make_tuple(htl::get<Indexes>(std::forward<Tuple>(tuple))...);
+template <std::size_t... Indexes, class Value, class Tuple_>
+auto append_impl(std::index_sequence<Indexes...>, Value&& value, Tuple_&& tuple)
+    -> decltype(Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...,
+                      uncvref_t<Value>>(
+        htl::get<Indexes>(std::forward<Tuple_>(tuple))...,
+        std::forward<Value>(value))) {
+  return Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...,
+               uncvref_t<Value>>(
+      htl::get<Indexes>(std::forward<Tuple_>(tuple))...,
+      std::forward<Value>(value));
 }
 }
 }
 
-template <std::size_t... Indexes, class Tuple,
-          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
-          CONCEPT_REQUIRES(and_c<
-              (Indexes >= 0 &&
-               Indexes < tuple_traits::num_elements<uncvref_t<Tuple>>())...>())>
-auto make_subtuple(std::index_sequence<Indexes...> indexes, Tuple&& tuple)
-    -> decltype(detail::algorithm::make_subtuple_impl(
-        indexes, std::forward<Tuple>(tuple))) {
-  return detail::algorithm::make_subtuple_impl(indexes,
-                                               std::forward<Tuple>(tuple));
+template <class Value, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>())>
+auto append(Value&& value, Tuple&& tuple)
+    -> decltype(detail::algorithm::append_impl(
+        std::make_index_sequence<
+            tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+        std::forward<Value>(value), std::forward<Tuple>(tuple))) {
+  return detail::algorithm::append_impl(
+      std::make_index_sequence<
+          tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+      std::forward<Value>(value), std::forward<Tuple>(tuple));
+}
+
+////////////
+// prepend //
+////////////
+
+namespace detail {
+namespace algorithm {
+template <std::size_t... Indexes, class Value, class Tuple_>
+auto prepend_impl(std::index_sequence<Indexes...>, Value&& value,
+                  Tuple_&& tuple)
+    -> decltype(
+        Tuple<uncvref_t<Value>,
+              tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+            std::forward<Value>(value),
+            htl::get<Indexes>(std::forward<Tuple_>(tuple))...)) {
+  return Tuple<uncvref_t<Value>,
+               tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+      std::forward<Value>(value),
+      htl::get<Indexes>(std::forward<Tuple_>(tuple))...);
+}
+}
+}
+
+template <class Value, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>())>
+auto prepend(Value&& value, Tuple&& tuple)
+    -> decltype(detail::algorithm::prepend_impl(
+        std::make_index_sequence<
+            tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+        std::forward<Value>(value), std::forward<Tuple>(tuple))) {
+  return detail::algorithm::prepend_impl(
+      std::make_index_sequence<
+          tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+      std::forward<Value>(value), std::forward<Tuple>(tuple));
 }
 
 //////////

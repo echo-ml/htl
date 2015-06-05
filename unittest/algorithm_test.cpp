@@ -32,8 +32,39 @@ TEST_CASE("remove_if") {
   auto t1 = make_tuple(3, 3.0, 5ul);
   auto pred = [](auto x) { return std::is_floating_point<decltype(x)>(); };
   auto t2 = remove_if(pred, t1);
-  type_equal<decltype(t2), Tuple<int, unsigned long>>();
 
+  type_equal<decltype(t2), Tuple<int, unsigned long>>();
   CHECK(get<0>(t2) == 3);
   CHECK(get<1>(t2) == 5ul);
+
+  int x = 3; 
+  double y = 4;
+  Tuple<int&, double&> t3(x, y);
+  auto t4 = remove_if(pred, t3);
+
+  type_equal<decltype(t4), Tuple<int&>>();
+  x = 22;
+  CHECK(get<0>(t4) == 22);
+}
+
+TEST_CASE("append") {
+  auto t1 = make_tuple(3, 4.0);
+  auto t2 = append(2ul, t1);
+
+  type_equal<decltype(t2), Tuple<int, double, unsigned long>>();
+
+  CHECK(get<0>(t2) == 3);
+  CHECK(get<1>(t2) == 4.0);
+  CHECK(get<2>(t2) == 2ul);
+}
+
+TEST_CASE("prepend") {
+  auto t1 = make_tuple(3, 4.0);
+  auto t2 = prepend(2ul, t1);
+
+  type_equal<decltype(t2), Tuple<unsigned long, int, double>>();
+
+  CHECK(get<0>(t2) == 2ul);
+  CHECK(get<1>(t2) == 3);
+  CHECK(get<2>(t2) == 4.0);
 }

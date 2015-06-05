@@ -22,7 +22,11 @@ template <class Tag, class Value>
 struct PackBase<Tag, Value, true> {
   CONCEPT_MEMBER_REQUIRES(std::is_default_constructible<Value>::value)
   PackBase() {}
-  PackBase(const Value&) {}
+
+  template <class OtherValue,
+            CONCEPT_REQUIRES(std::is_constructible<Value, OtherValue>::value)>
+  PackBase(OtherValue&& other_value) {}
+
   Value& value() & { return reinterpret_cast<Value&>(*this); }
   const Value& value() const & { return reinterpret_cast<const Value&>(*this); }
   Value&& value() && { return reinterpret_cast<Value&&>(*this); }
@@ -32,8 +36,12 @@ template <class Tag, class Value>
 struct PackBase<Tag, Value, false> {
   CONCEPT_MEMBER_REQUIRES(std::is_default_constructible<Value>::value)
   PackBase() {}
-  PackBase(const Value& value) : _value(value) {}
-  PackBase(Value&& value) : _value(std::move(value)) {}
+
+  template <class OtherValue,
+            CONCEPT_REQUIRES(std::is_constructible<Value, OtherValue>::value)>
+  PackBase(OtherValue&& other_value)
+      : _value(std::forward<OtherValue>(other_value)) {}
+
   auto& value() & { return _value; }
   auto& value() const & { return _value; }
   auto&& value() && { return std::move(_value); }
@@ -48,13 +56,8 @@ struct PackBase<Tag, Value, false> {
 //////////
 
 template <class Tag, class Value = Tag>
-struct Pack
-    : detail::PackBase<Tag, Value,
-                       std::is_empty<Value>::value &&
-                           std::is_default_constructible<Value>::value> {
-  using detail::PackBase<
-      Tag, Value, std::is_empty<Value>::value &&
-                      std::is_default_constructible<Value>::value>::PackBase;
+struct Pack : detail::PackBase<Tag, Value, std::is_empty<Value>::value> {
+  using detail::PackBase<Tag, Value, std::is_empty<Value>::value>::PackBase;
 };
 
 ////////////
