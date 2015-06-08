@@ -56,9 +56,9 @@ auto append(Value&& value, Tuple&& tuple)
       std::forward<Value>(value), std::forward<Tuple>(tuple));
 }
 
-////////////
+/////////////
 // prepend //
-////////////
+/////////////
 
 namespace detail {
 namespace algorithm {
@@ -105,19 +105,75 @@ template <std::size_t... Indexes, class... Values>
 struct left_impl<std::index_sequence<Indexes...>, Tuple<Values...>> {
   using type = Tuple<tuple_traits::element_type<Indexes, Tuple<Values...>>...>;
 };
+
+template <class Indexes, class Tuple>
+using left_impl_t = typename left_impl<Indexes, Tuple>::type;
 }
 }
 
-template <int I, class T, CONCEPT_REQUIRES(concept::tuple<uncvref_t<T>>()),
-          CONCEPT_REQUIRES((I >= 0) &&
-                           (I < tuple_traits::num_elements<uncvref_t<T>>()))>
-auto left(T&& t) -> copy_cv_qualifiers<
-    T,
-    detail::algorithm::left_impl<std::make_index_sequence<I>, uncvref_t<T>>> {
+template <
+    int N, class Tuple, CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+    CONCEPT_REQUIRES((N >= 0) &&
+                     (N <= tuple_traits::num_elements<uncvref_t<Tuple>>()))>
+auto left(Tuple&& tuple) -> copy_cv_qualifiers<
+    Tuple, detail::algorithm::left_impl_t<std::make_index_sequence<N>,
+                                          uncvref_t<Tuple>>> {
   return reinterpret_cast<copy_cv_qualifiers<
-      T,
-      detail::algorithm::left_impl<std::make_index_sequence<I>, uncvref_t<T>>>>(
-      t);
+      Tuple, detail::algorithm::left_impl_t<std::make_index_sequence<N>,
+                                            uncvref_t<Tuple>>>>(tuple);
+}
+
+///////////
+// right //
+///////////
+
+namespace detail {
+namespace algorithm {
+
+template <class, class>
+struct right_impl {};
+
+template <std::size_t... Indexes, class... Values>
+struct right_impl<std::index_sequence<Indexes...>, Tuple<Values...>> {
+  using type = Tuple<tuple_traits::element_type<
+      sizeof...(Values) - sizeof...(Indexes) + Indexes, Tuple<Values...>>...>;
+};
+
+template <class Indexes, class Tuple>
+using right_impl_t = typename right_impl<Indexes, Tuple>::type;
+}
+}
+
+template <int N, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+          CONCEPT_REQUIRES(N == 0)>
+auto right(Tuple&& tuple) -> copy_cv_qualifiers<Tuple, htl::Tuple<>> {
+  return reinterpret_cast<copy_cv_qualifiers<Tuple, htl::Tuple<>>>(tuple);
+}
+
+template <int N, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+          CONCEPT_REQUIRES(
+              (N > 0) && (N <= tuple_traits::num_elements<uncvref_t<Tuple>>()))>
+auto right(Tuple&& tuple) -> copy_cv_qualifiers<
+    Tuple, detail::algorithm::right_impl_t<std::make_index_sequence<N>,
+                                           uncvref_t<Tuple>>> {
+  return reinterpret_cast<copy_cv_qualifiers<
+      Tuple, detail::algorithm::right_impl_t<std::make_index_sequence<N>,
+                                             uncvref_t<Tuple>>>>(
+      htl::get<tuple_traits::num_elements<uncvref_t<Tuple>>() - N>(tuple));
+}
+
+//////////
+// tail //
+//////////
+
+template <class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
+decltype(auto) tail(Tuple&& tuple) {
+  return right<tuple_traits::num_elements<uncvref_t<Tuple>>() - 1>(
+      std::forward<Tuple>(tuple));
 }
 
 /////////
@@ -179,8 +235,9 @@ using type_match_indexes =
 ///////////////
 
 template <class Predicate, class Tuple,
-          CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>() &&
-                           std::is_copy_constructible<uncvref_t<Tuple>>::value)>
+          CONCEPT_REQUIRES(
+              concept::applicable_constant_predicate<Predicate, Tuple>() &&
+              std::is_copy_constructible<uncvref_t<Tuple>>::value)>
 auto partition(const Predicate& predicate, Tuple&& tuple) {
   using BooleanTuple = decltype(map(predicate, tuple));
   using TrueIndexes =
@@ -196,13 +253,34 @@ auto partition(const Predicate& predicate, Tuple&& tuple) {
 ///////////////
 
 template <class Predicate, class Tuple,
-          CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>() &&
-                           std::is_copy_constructible<uncvref_t<Tuple>>::value)>
+          CONCEPT_REQUIRES(
+              concept::applicable_constant_predicate<Predicate, Tuple>() &&
+              std::is_copy_constructible<uncvref_t<Tuple>>::value)>
 auto remove_if(const Predicate& predicate, Tuple&& tuple) {
   using BooleanTuple = decltype(map(predicate, tuple));
   using FalseIndexes =
       detail::algorithm::type_match_indexes<std::false_type, BooleanTuple>;
   return make_subtuple(FalseIndexes(), std::forward<Tuple>(tuple));
+}
+
+///////////////
+// left_fold //
+///////////////
+
+template <class Functor, class X0, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
+auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
+  return x0;
+}
+
+template <class Functor, class X0, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() != 0)>
+auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
+  return left_fold(functor, functor(std::forward<X0>(x0),
+                                    htl::get<0>(std::forward<Tuple>(tuple))),
+                   tail(std::forward<Tuple>(tuple)));
 }
 }
 }

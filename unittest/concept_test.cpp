@@ -4,15 +4,15 @@
 using namespace echo;
 using namespace echo::htl;
 
-TEST_CASE("applicable_predicate") {
+TEST_CASE("applicable_constant_predicate") {
   using Tuple1 = Tuple<int, double>;
 
   auto pred1 = [](auto x) {
     return std::is_integral<decltype(x)>();
   };
 
-  CHECK(htl::concept::applicable_predicate<decltype(pred1), Tuple1>());
-  CHECK(!htl::concept::applicable_predicate<int, Tuple1>());
+  CHECK(htl::concept::applicable_constant_predicate<decltype(pred1), Tuple1>());
+  CHECK(!htl::concept::applicable_constant_predicate<int, Tuple1>());
 }
 
 struct MyStruct {};
