@@ -34,7 +34,7 @@ struct TupleBase<std::index_sequence<Indexes...>, Values...>
   template <class... ValuesPrime,
             CONCEPT_REQUIRES((sizeof...(ValuesPrime) == sizeof...(Values)) &&
                              (sizeof...(Values) > 0))>
-  TupleBase(ValuesPrime&&... values_prime)
+  explicit TupleBase(ValuesPrime&&... values_prime)
       : Pack<tag<Indexes>, Values>(std::forward<ValuesPrime>(values_prime))... {
   }
 };

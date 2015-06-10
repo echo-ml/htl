@@ -7,6 +7,13 @@ using namespace echo::htl;
 template <int I>
 auto left(...) -> std::nullptr_t;
 
+auto left_fold(...) -> std::nullptr_t;
+
+TEST_CASE("head") {
+  auto t1 = make_tuple(3, 2.0);
+  CHECK(head(t1) == 3);
+}
+
 TEST_CASE("left") {
   Tuple<double, int, float> t1(3.0, 2, 1.5f);
   decltype(auto) t2 = left<1>(t1);
@@ -83,4 +90,9 @@ TEST_CASE("left_fold") {
   auto x = left_fold(
     [](auto lhs, auto rhs) { return lhs*rhs; }, 1.0, t1);
   CHECK(x == 15);
+
+  SECTION("sfinae") {
+    using T1 = decltype(left_fold(3, 'x', t1));
+    type_equal<T1, std::nullptr_t>();
+  }
 }

@@ -30,6 +30,15 @@ constexpr bool tuple() {
   return detail::tuple::tuple_impl<T>::value;
 }
 
+/////////////
+// boolean //
+/////////////
+
+template<class T>
+constexpr bool boolean() {
+  return std::is_convertible<T, bool>::value;
+}
+
 //////////////////////
 // boolean_constant //
 //////////////////////
@@ -74,6 +83,42 @@ constexpr bool mappable() {
   return models<detail::concept::Mappable, Functor, Tuple>();
 }
 
+//////////////////////////
+// applicable_predicate //
+//////////////////////////
+
+namespace detail {
+namespace concept {
+
+template<class>
+struct ApplicablePredicateImpl {};
+
+template<std::size_t... Indexes>
+struct ApplicablePredicateImpl<std::index_sequence<Indexes...>>
+  : Concept {
+  template<class Predicate, class Tuple>
+  auto require(Predicate&& predicate, Tuple&& tuple) -> list<
+    and_c<boolean<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()
+  >;
+};
+
+struct ApplicablePredicate : Concept {
+  template<class Predicate, class Tuple>
+  auto require(Predicate&& predicate, Tuple&& tuple) -> list<
+    htl::concept::tuple<uncvref_t<Tuple>>(),
+    models<ApplicablePredicateImpl<
+      std::make_index_sequence<tuple_traits::num_elements<uncvref_t<Tuple>>()>>,
+        Predicate, Tuple>()
+  >;
+};
+
+}}
+
+template<class Predicate, class Tuple>
+constexpr bool applicable_predicate() {
+  return models<detail::concept::ApplicablePredicate, Predicate, Tuple>();
+}
+
 ///////////////////////////////////
 // applicable_constant_predicate //
 ///////////////////////////////////
@@ -89,7 +134,7 @@ struct ApplicableConstantPredicateImpl<std::index_sequence<Indexes...>>
     : Concept {
   template <class Predicate, class Tuple>
   auto require(Predicate&& predicate, Tuple&& tuple) -> list<
-      and_c<boolean_constant<decltype(predicate(get<Indexes>(tuple)))>()...>()>;
+      and_c<boolean_constant<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()>;
 };
 
 struct ApplicableConstantPredicate : Concept {
@@ -113,45 +158,42 @@ constexpr bool applicable_constant_predicate() {
 // left_foldable //
 ///////////////////
 
-namespace detail { namespace concept {
+namespace detail {
+namespace concept {
 
-// struct LeftFoldable : Concept {
-//   template<class Functor, class X0, class Tuple>
-//   auto require(const Functor& functor, X0&& x0, Tuple&& tuple) -> list<
-//     valid<
-//       decltype(functor(x0, htl::get<0>(tuple)))
-//     >()
-//   >;
-// };
-//
-// template<class Functor, class X0, class Tuple,
-//   CONCEPT_REQUIRES(
-//     tuple_traits::num_elements<uncvref_t<Tuple>>() == 0
-//   )
-// >
-// constexpr bool left_foldable_impl() {
-//   return true;
-// }
-//
-// template<class Functor, class X0, class Tuple,
-//   CONCEPT_REQUIRES(
-//     tuple_traits::num_elements<uncvref_t<Tuple>>() != 0
-//   )
-// >
-// constexpr bool left_foldable_impl() {
-//   using Tail = decltype(htl::tail(std::declval<Tuple>()));
-  // return models<LeftFoldable, Functor, X0, Tuple>() &&
-  //   left_foldable_impl<;
-//   return true;
-// }
+template <int I, int N>
+struct LeftFoldableImpl : Concept {
+  template <class Functor, class X, class Tuple>
+  auto require(const Functor& functor, X&& x, Tuple&& tuple)
+      -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
+              models<LeftFoldableImpl<I + 1, N>, Functor,
+                     decltype(functor(std::forward<X>(x),
+                                      htl::get<I>(std::forward<Tuple>(tuple)))),
+                     Tuple>()>;
+};
 
-}}
+template <int N>
+struct LeftFoldableImpl<N, N> : Concept {
+  template <class Functor, class X, class Tuple>
+  auto require(const Functor&, X&&, Tuple && )
+      -> list<htl::concept::tuple<uncvref_t<Tuple>>()>;
+};
 
-template<class Functor, class X0, class Tuple>
-constexpr bool left_foldable() {
-  return false;
+struct LeftFoldable : Concept {
+  template <class Functor, class X0, class Tuple>
+  auto require(const Functor& functor, X0&& x0, Tuple&& tuple)
+      -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
+              models<LeftFoldableImpl<
+                         0, tuple_traits::num_elements<uncvref_t<Tuple>>()>,
+                     Functor, X0, Tuple>()>;
+};
+}
 }
 
+template <class Functor, class X0, class Tuple>
+constexpr bool left_foldable() {
+  return models<detail::concept::LeftFoldable, Functor, X0, Tuple>();
+}
 }
 }
 }

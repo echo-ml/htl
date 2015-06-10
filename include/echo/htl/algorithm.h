@@ -6,6 +6,18 @@
 namespace echo {
 namespace htl {
 
+//////////
+// head //
+//////////
+
+template<class Tuple, 
+  CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+  CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
+decltype(auto) head(Tuple&& tuple) {
+  return htl::get<0>(std::forward<Tuple>(tuple));
+}
+  
+
 ///////////////////
 // make_subtuple //
 ///////////////////
@@ -130,17 +142,19 @@ auto left(Tuple&& tuple) -> copy_cv_qualifiers<
 namespace detail {
 namespace algorithm {
 
-template <class, class>
+template <int, class, class>
 struct right_impl {};
 
-template <std::size_t... Indexes, class... Values>
-struct right_impl<std::index_sequence<Indexes...>, Tuple<Values...>> {
+template <int I, std::size_t... Indexes, class... Values>
+struct right_impl<I, std::index_sequence<Indexes...>, Tuple<Values...>> {
   using type = Tuple<tuple_traits::element_type<
-      sizeof...(Values) - sizeof...(Indexes) + Indexes, Tuple<Values...>>...>;
+      I + Indexes, Tuple<Values...>>...>;
 };
 
 template <class Indexes, class Tuple>
-using right_impl_t = typename right_impl<Indexes, Tuple>::type;
+using right_impl_t = typename right_impl<
+  tuple_traits::num_elements<Tuple>() - Indexes::size(),
+  Indexes, Tuple>::type;
 }
 }
 
@@ -269,14 +283,16 @@ auto remove_if(const Predicate& predicate, Tuple&& tuple) {
 
 template <class Functor, class X0, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
-                           tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() ==
+                               0 &&
+                           std::is_copy_constructible<uncvref_t<X0>>::value)>
 auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
   return x0;
 }
 
 template <class Functor, class X0, class Tuple,
-          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
-                           tuple_traits::num_elements<uncvref_t<Tuple>>() != 0)>
+          CONCEPT_REQUIRES(concept::left_foldable<Functor, X0, Tuple>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
 auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
   return left_fold(functor, functor(std::forward<X0>(x0),
                                     htl::get<0>(std::forward<Tuple>(tuple))),
