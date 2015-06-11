@@ -34,7 +34,7 @@ constexpr bool tuple() {
 // boolean //
 /////////////
 
-template<class T>
+template <class T>
 constexpr bool boolean() {
   return std::is_convertible<T, bool>::value;
 }
@@ -90,33 +90,72 @@ constexpr bool mappable() {
 namespace detail {
 namespace concept {
 
-template<class>
+template <class>
 struct ApplicablePredicateImpl {};
 
-template<std::size_t... Indexes>
-struct ApplicablePredicateImpl<std::index_sequence<Indexes...>>
-  : Concept {
-  template<class Predicate, class Tuple>
+template <std::size_t... Indexes>
+struct ApplicablePredicateImpl<std::index_sequence<Indexes...>> : Concept {
+  template <class Predicate, class Tuple>
   auto require(Predicate&& predicate, Tuple&& tuple) -> list<
-    and_c<boolean<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()
-  >;
+      and_c<boolean<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()>;
 };
 
 struct ApplicablePredicate : Concept {
-  template<class Predicate, class Tuple>
-  auto require(Predicate&& predicate, Tuple&& tuple) -> list<
-    htl::concept::tuple<uncvref_t<Tuple>>(),
-    models<ApplicablePredicateImpl<
-      std::make_index_sequence<tuple_traits::num_elements<uncvref_t<Tuple>>()>>,
-        Predicate, Tuple>()
-  >;
+  template <class Predicate, class Tuple>
+  auto require(Predicate&& predicate, Tuple&& tuple)
+      -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
+              models<ApplicablePredicateImpl<std::make_index_sequence<
+                         tuple_traits::num_elements<uncvref_t<Tuple>>()>>,
+                     Predicate, Tuple>()>;
 };
+}
+}
 
-}}
-
-template<class Predicate, class Tuple>
+template <class Predicate, class Tuple>
 constexpr bool applicable_predicate() {
   return models<detail::concept::ApplicablePredicate, Predicate, Tuple>();
+}
+
+/////////////////////////////////
+// applicable_binary_predicate //
+/////////////////////////////////
+
+namespace detail {
+namespace concept {
+
+template <class>
+struct ApplicableBinaryPredicateImpl {};
+
+template <std::size_t... Indexes>
+struct ApplicableBinaryPredicateImpl<std::index_sequence<Indexes...>>
+    : Concept {
+  template <class Predicate, class TupleLhs, class TupleRhs>
+  auto require(Predicate&& predicate, TupleLhs&& tuple_lhs,
+               TupleRhs&& tuple_rhs)
+      -> list<and_c<
+          boolean<decltype(predicate(htl::get<Indexes>(tuple_lhs),
+                                     htl::get<Indexes>(tuple_rhs)))>()...>()>;
+};
+
+struct ApplicableBinaryPredicate : Concept {
+  template <class Predicate, class TupleLhs, class TupleRhs>
+  auto require(Predicate&& predicate, TupleLhs&& tuple_lhs,
+               TupleRhs&& tuple_rhs)
+      -> list<htl::concept::tuple<uncvref_t<TupleLhs>>(),
+              htl::concept::tuple<uncvref_t<TupleRhs>>(),
+              tuple_traits::num_elements<uncvref_t<TupleLhs>>() ==
+                  tuple_traits::num_elements<uncvref_t<TupleRhs>>(),
+              models<ApplicableBinaryPredicateImpl<std::make_index_sequence<
+                         tuple_traits::num_elements<uncvref_t<TupleLhs>>()>>,
+                     Predicate, TupleLhs, TupleRhs>()>;
+};
+}
+}
+
+template <class Predicate, class TupleLhs, class TupleRhs>
+constexpr bool applicable_binary_predicate() {
+  return models<detail::concept::ApplicableBinaryPredicate, Predicate, TupleLhs,
+                TupleRhs>();
 }
 
 ///////////////////////////////////
@@ -133,8 +172,8 @@ template <std::size_t... Indexes>
 struct ApplicableConstantPredicateImpl<std::index_sequence<Indexes...>>
     : Concept {
   template <class Predicate, class Tuple>
-  auto require(Predicate&& predicate, Tuple&& tuple) -> list<
-      and_c<boolean_constant<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()>;
+  auto require(Predicate&& predicate, Tuple&& tuple) -> list<and_c<
+      boolean_constant<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()>;
 };
 
 struct ApplicableConstantPredicate : Concept {

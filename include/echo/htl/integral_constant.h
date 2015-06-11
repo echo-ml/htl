@@ -1,5 +1,6 @@
 #pragma once
 
+#include <echo/concept2.h>
 #include <type_traits>
 
 namespace echo {
@@ -34,6 +35,30 @@ ECHO_DEFINE_BINARY_OPERATOR(!= )
 ECHO_DEFINE_BINARY_OPERATOR(&&)
 ECHO_DEFINE_BINARY_OPERATOR(|| )
 #undef ECHO_DEFINE_BINARY_OPERATOR
+
+template <class T, T Value, CONCEPT_REQUIRES(Value)>
+auto operator||(htl::integral_constant<T, Value>,
+                bool) -> htl::integral_constant<bool, true> {
+  return {};
+}
+
+template <class T, T Value, CONCEPT_REQUIRES(Value)>
+auto operator||(bool, htl::integral_constant<T, Value>)
+    -> htl::integral_constant<bool, true> {
+  return {};
+}
+
+template <class T, T Value, CONCEPT_REQUIRES(!Value)>
+auto operator&&(htl::integral_constant<T, Value>,
+                bool) -> htl::integral_constant<bool, false> {
+  return {};
+}
+
+template <class T, T Value, CONCEPT_REQUIRES(!Value)>
+auto operator&&(bool, htl::integral_constant<T, Value>)
+    -> htl::integral_constant<bool, false> {
+  return {};
+}
 
 #define ECHO_DEFINE_UNARY_OPERATOR(SYMBOL)                               \
   template <class T, T Value>                                            \

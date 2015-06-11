@@ -17,4 +17,7 @@ TEST_CASE("integral_constant") {
   type_equal<decltype(x4), htl::integral_constant<bool, true>>();
   type_equal<decltype(x5), htl::integral_constant<bool, false>>();
   type_equal<decltype(x6), htl::integral_constant<int, -4>>();
+
+  using T1 = decltype(false || htl::integral_constant<bool, true>());
+  type_equal<T1, htl::integral_constant<bool, true>>();
 }
