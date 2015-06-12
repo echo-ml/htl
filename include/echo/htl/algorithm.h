@@ -1,5 +1,6 @@
 #pragma once
 
+#include <echo/htl/integral_constant.h>
 #include <echo/htl/tuple.h>
 #include <echo/htl/concept.h>
 
@@ -10,13 +11,11 @@ namespace htl {
 // head //
 //////////
 
-template<class Tuple, 
-  CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
-  CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
+template <class Tuple, CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+          CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
 decltype(auto) head(Tuple&& tuple) {
   return htl::get<0>(std::forward<Tuple>(tuple));
 }
-  
 
 ///////////////////
 // make_subtuple //
@@ -147,14 +146,14 @@ struct right_impl {};
 
 template <int I, std::size_t... Indexes, class... Values>
 struct right_impl<I, std::index_sequence<Indexes...>, Tuple<Values...>> {
-  using type = Tuple<tuple_traits::element_type<
-      I + Indexes, Tuple<Values...>>...>;
+  using type =
+      Tuple<tuple_traits::element_type<I + Indexes, Tuple<Values...>>...>;
 };
 
 template <class Indexes, class Tuple>
-using right_impl_t = typename right_impl<
-  tuple_traits::num_elements<Tuple>() - Indexes::size(),
-  Indexes, Tuple>::type;
+using right_impl_t =
+    typename right_impl<tuple_traits::num_elements<Tuple>() - Indexes::size(),
+                        Indexes, Tuple>::type;
 }
 }
 
@@ -297,6 +296,86 @@ auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
   return left_fold(functor, functor(std::forward<X0>(x0),
                                     htl::get<0>(std::forward<Tuple>(tuple))),
                    tail(std::forward<Tuple>(tuple)));
+}
+
+/////////////
+// find_if //
+/////////////
+
+namespace detail {
+namespace algorithm {
+template <class Index, class Predicate, class Tuple,
+          CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
+auto find_if_impl(Index, const Predicate&, Tuple&&) {
+  return htl::integral_constant<int, -1>{};
+}
+
+template <class Index, class Predicate, class Tuple,
+          CONCEPT_REQUIRES(
+              tuple_traits::num_elements<uncvref_t<Tuple>>() != 0 &&
+              concept::boolean_true_constant<decltype(std::declval<Predicate>()(
+                  htl::head(std::declval<Tuple>())))>())>
+auto find_if_impl(Index i, const Predicate&, Tuple&&) {
+  return i;
+}
+
+template <class Index, class Predicate, class Tuple,
+          CONCEPT_REQUIRES(
+              tuple_traits::num_elements<uncvref_t<Tuple>>() != 0 &&
+              !concept::boolean_constant<decltype(std::declval<Predicate>()(
+                  htl::head(std::declval<Tuple>())))>())>
+int find_if_impl(Index, const Predicate& predicate, Tuple&& tuple);
+
+template <
+    class Index, class Predicate, class Tuple,
+    CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
+                     tuple_traits::num_elements<uncvref_t<Tuple>>() != 0 &&
+                     concept::applicable_predicate<Predicate, Tuple>() &&
+                     concept::boolean_false_constant<decltype(std::declval<
+                         Predicate>()(htl::head(std::declval<Tuple>())))>())>
+auto find_if_impl(Index i, const Predicate& predicate, Tuple&& tuple) {
+  return find_if_impl(i + htl::integral_constant<int, 1>(), predicate,
+                      htl::tail(tuple));
+}
+
+template <class Index, class Predicate, class Tuple,
+          CONCEPT_REQUIRES_REDECLARATION(
+              tuple_traits::num_elements<uncvref_t<Tuple>>() != 0 &&
+              !concept::boolean_constant<decltype(std::declval<Predicate>()(
+                  htl::head(std::declval<Tuple>())))>())>
+int find_if_impl(Index i, const Predicate& predicate, Tuple&& tuple) {
+  if (predicate(htl::head(tuple)))
+    return i;
+  else
+    return find_if_impl(i + 1, predicate, htl::tail(tuple));
+}
+}
+}
+
+template <class Predicate, class Tuple,
+          CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>())>
+auto find_if(const Predicate& predicate, Tuple&& tuple) {
+  return detail::algorithm::find_if_impl(htl::integral_constant<int, 0>(),
+                                         predicate, tuple);
+}
+
+//////////////
+// count_if //
+//////////////
+
+template <class Predicate, class Tuple,
+          CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
+auto count_if(const Predicate& predicate, Tuple&&) {
+  return htl::integral_constant<int, 0>();
+}
+
+template <class Predicate, class Tuple,
+          CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>() &&
+                           tuple_traits::num_elements<uncvref_t<Tuple>>() != 0)>
+auto count_if(const Predicate& predicate, Tuple&& tuple) {
+  return (predicate(htl::head(tuple)) == htl::integral_constant<bool, true>()) +
+         count_if(predicate, htl::tail(tuple));
 }
 }
 }

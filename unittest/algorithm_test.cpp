@@ -96,3 +96,45 @@ TEST_CASE("left_fold") {
     type_equal<T1, std::nullptr_t>();
   }
 }
+
+TEST_CASE("find_if") {
+  auto t1 = htl::make_tuple(htl::integral_constant<int, 1>(),
+                            htl::integral_constant<int, 2>(), 3,
+                            htl::integral_constant<int, 4>());
+
+  auto p1 = find_if(
+    [](auto x) { return x == htl::integral_constant<int, 1>(); },
+    t1);
+  auto p2 = find_if(
+    [](auto x) { return x == htl::integral_constant<int, 10>(); },
+    t1);
+  auto p3 = find_if(
+    [](auto x) { return x == htl::integral_constant<int, 3>(); },
+    t1);
+  auto p4 = find_if(
+    [](auto x) { return x == htl::integral_constant<int, 4>(); },
+    t1);
+  type_equal<decltype(p1), htl::integral_constant<int, 0>>();
+  CHECK(p2 == -1);
+  CHECK(p3 == 2);
+  CHECK(p4 == 3);
+}
+
+TEST_CASE("count_if") {
+  auto t1 = htl::make_tuple(htl::integral_constant<int, 1>(),
+                            htl::integral_constant<int, 2>());
+
+  auto t2 = htl::make_tuple(htl::integral_constant<int, 1>(),
+                            htl::integral_constant<int, 2>(), 3,
+                            htl::integral_constant<int, 2>());
+
+  auto p1 = count_if(
+    [](auto x) { return x == htl::integral_constant<int, 2>(); },
+    t1);
+  auto p2 = count_if(
+    [](auto x) { return x == htl::integral_constant<int, 2>(); },
+    t2);
+
+  type_equal<decltype(p1), htl::integral_constant<int, 1>>();
+  CHECK(p2 == 2);
+}

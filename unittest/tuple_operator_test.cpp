@@ -10,12 +10,14 @@ TEST_CASE("tuple_operator") {
   auto t4 = htl::make_tuple(htl::integral_constant<int, 4>(), 3);
   auto t5 = htl::make_tuple(htl::integral_constant<int, 5>(), 2);
   auto t6 = htl::make_tuple(4, 3);
+  auto t7 = htl::make_tuple(2);
 
   auto x1 = t1 < t2;
   auto x2 = t1 > t2;
   auto x3 = t3 < t1;
   auto x4 = t4 < t5;
   auto x5 = t4 == t5;
+  auto x6 = t7 == t1;
 
   CHECK(x1);
   CHECK(!x2);
@@ -27,4 +29,6 @@ TEST_CASE("tuple_operator") {
   CHECK(!(t5 == t4));
   CHECK(t5 != t4);
   type_equal<decltype(x5), htl::integral_constant<bool, false>>();
+
+  type_equal<decltype(x6), htl::integral_constant<bool, false>>();
 }

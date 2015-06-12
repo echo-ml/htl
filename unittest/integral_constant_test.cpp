@@ -21,3 +21,12 @@ TEST_CASE("integral_constant") {
   using T1 = decltype(false || htl::integral_constant<bool, true>());
   type_equal<T1, htl::integral_constant<bool, true>>();
 }
+
+TEST_CASE("integral_constant std") {
+  htl::integral_constant<int, 3> x;
+  std::integral_constant<int, 4> y;
+
+  auto z = x + y;
+
+  type_equal<decltype(z), htl::integral_constant<int, 7>>();
+}

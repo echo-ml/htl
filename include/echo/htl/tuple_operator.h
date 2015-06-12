@@ -1,9 +1,9 @@
 #pragma once
 
 #include <echo/htl/tuple.h>
-#include <echo/htl/functional.h>
 #include <echo/htl/algorithm.h>
 #include <echo/htl/integral_constant.h>
+#include <echo/utility/functional.h>
 
 namespace echo {
 namespace htl {
@@ -33,27 +33,27 @@ auto apply_comparison(const Predicate& predicate, Lhs&& lhs, Rhs&& rhs) {
 // tuple operator //
 ////////////////////
 
-#define ECHO_MAKE_STRICT_OPERATOR(SYMBOL, COMPARISON)                         \
-  template <class LhsTuple, class RhsTuple,                                   \
-            CONCEPT_REQUIRES(                                                 \
-                concept::applicable_binary_predicate<                         \
-                    uncvref_t<decltype(COMPARISON)>, LhsTuple, RhsTuple>() && \
-                tuple_traits::num_elements<uncvref_t<LhsTuple>>() == 1)>      \
-  auto operator SYMBOL(LhsTuple&& lhs_tuple, RhsTuple&& rhs_tuple) {          \
-    return htl::head(lhs_tuple) SYMBOL htl::head(rhs_tuple);                  \
-  }                                                                           \
-  template <class LhsTuple, class RhsTuple,                                   \
-            CONCEPT_REQUIRES(                                                 \
-                concept::applicable_binary_predicate<                         \
-                    uncvref_t<decltype(COMPARISON)>, LhsTuple, RhsTuple>() && \
-                concept::applicable_binary_predicate<                         \
-                    uncvref_t<decltype(htl::functional::equal)>, LhsTuple,    \
-                    RhsTuple>() &&                                            \
-                tuple_traits::num_elements<uncvref_t<LhsTuple>>() != 1)>      \
-  auto operator SYMBOL(LhsTuple&& lhs_tuple, RhsTuple&& rhs_tuple) {          \
-    return htl::head(lhs_tuple) SYMBOL htl::head(rhs_tuple) ||                \
-           (htl::head(lhs_tuple) == htl::head(rhs_tuple) &&                   \
-            htl::tail(lhs_tuple) SYMBOL htl::tail(rhs_tuple));                \
+#define ECHO_MAKE_STRICT_OPERATOR(SYMBOL, COMPARISON)                          \
+  template <class LhsTuple, class RhsTuple,                                    \
+            CONCEPT_REQUIRES(                                                  \
+                concept::applicable_binary_predicate<                          \
+                    uncvref_t<decltype(COMPARISON)>, LhsTuple, RhsTuple>() &&  \
+                tuple_traits::num_elements<uncvref_t<LhsTuple>>() == 1)>       \
+  auto operator SYMBOL(LhsTuple&& lhs_tuple, RhsTuple&& rhs_tuple) {           \
+    return htl::head(lhs_tuple) SYMBOL htl::head(rhs_tuple);                   \
+  }                                                                            \
+  template <                                                                   \
+      class LhsTuple, class RhsTuple,                                          \
+      CONCEPT_REQUIRES(                                                        \
+          concept::applicable_binary_predicate<                                \
+              uncvref_t<decltype(COMPARISON)>, LhsTuple, RhsTuple>() &&        \
+          concept::applicable_binary_predicate<                                \
+              uncvref_t<decltype(functional::equal)>, LhsTuple, RhsTuple>() && \
+          tuple_traits::num_elements<uncvref_t<LhsTuple>>() != 1)>             \
+  auto operator SYMBOL(LhsTuple&& lhs_tuple, RhsTuple&& rhs_tuple) {           \
+    return htl::head(lhs_tuple) SYMBOL htl::head(rhs_tuple) ||                 \
+           (htl::head(lhs_tuple) == htl::head(rhs_tuple) &&                    \
+            htl::tail(lhs_tuple) SYMBOL htl::tail(rhs_tuple));                 \
   }
 ECHO_MAKE_STRICT_OPERATOR(<, functional::less)
 ECHO_MAKE_STRICT_OPERATOR(>, functional::greater)
@@ -89,6 +89,16 @@ template <
         tuple_traits::num_elements<uncvref_t<LhsTuple>>() == 1)>
 auto operator==(LhsTuple&& lhs_tuple, RhsTuple&& rhs_tuple) {
   return htl::head(lhs_tuple) == htl::head(rhs_tuple);
+}
+
+template <
+    class LhsTuple, class RhsTuple,
+    CONCEPT_REQUIRES(concept::tuple<uncvref_t<LhsTuple>>() &&
+                     concept::tuple<uncvref_t<RhsTuple>>() &&
+                     tuple_traits::num_elements<uncvref_t<LhsTuple>>() !=
+                         tuple_traits::num_elements<uncvref_t<RhsTuple>>())>
+htl::integral_constant<bool, false> operator==(LhsTuple&&, RhsTuple&&) {
+  return {};
 }
 
 template <

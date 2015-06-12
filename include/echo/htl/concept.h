@@ -39,14 +39,51 @@ constexpr bool boolean() {
   return std::is_convertible<T, bool>::value;
 }
 
+///////////////////////////
+// boolean_true_constant //
+///////////////////////////
+
+namespace detail { namespace concept {
+struct BooleanTrueConstant : Concept {
+  template<class T>
+  auto require(T&&) -> list<
+    boolean<T>(),
+    static_cast<bool>(T::value)
+  >;
+};
+}}
+
+template<class T>
+constexpr bool boolean_true_constant() {
+  return models<detail::concept::BooleanTrueConstant, T>();
+}
+
+////////////////////////////
+// boolean_false_constant //
+////////////////////////////
+
+namespace detail { namespace concept {
+struct BooleanFalseConstant : Concept {
+  template<class T>
+  auto require(T&&) -> list<
+    boolean<T>(),
+    static_cast<bool>(!T::value)
+  >;
+};
+}}
+
+template<class T>
+constexpr bool boolean_false_constant() {
+  return models<detail::concept::BooleanFalseConstant, T>();
+}
+
 //////////////////////
 // boolean_constant //
 //////////////////////
 
 template <class T>
 constexpr bool boolean_constant() {
-  return std::is_convertible<T, std::true_type>::value ||
-         std::is_convertible<T, std::false_type>::value;
+  return boolean_true_constant<T>() || boolean_false_constant<T>();
 }
 
 //////////////
