@@ -43,17 +43,16 @@ constexpr bool boolean() {
 // boolean_true_constant //
 ///////////////////////////
 
-namespace detail { namespace concept {
+namespace detail {
+namespace concept {
 struct BooleanTrueConstant : Concept {
-  template<class T>
-  auto require(T&&) -> list<
-    boolean<T>(),
-    static_cast<bool>(T::value)
-  >;
+  template <class T>
+  auto require(T && ) -> list<boolean<T>(), static_cast<bool>(T::value)>;
 };
-}}
+}
+}
 
-template<class T>
+template <class T>
 constexpr bool boolean_true_constant() {
   return models<detail::concept::BooleanTrueConstant, T>();
 }
@@ -62,17 +61,16 @@ constexpr bool boolean_true_constant() {
 // boolean_false_constant //
 ////////////////////////////
 
-namespace detail { namespace concept {
+namespace detail {
+namespace concept {
 struct BooleanFalseConstant : Concept {
-  template<class T>
-  auto require(T&&) -> list<
-    boolean<T>(),
-    static_cast<bool>(!T::value)
-  >;
+  template <class T>
+  auto require(T && ) -> list<boolean<T>(), static_cast<bool>(!T::value)>;
 };
-}}
+}
+}
 
-template<class T>
+template <class T>
 constexpr bool boolean_false_constant() {
   return models<detail::concept::BooleanFalseConstant, T>();
 }
@@ -93,24 +91,19 @@ constexpr bool boolean_constant() {
 namespace detail {
 namespace concept {
 
-template <class>
-struct MappableImpl {};
-
-template <std::size_t... Indexes>
-struct MappableImpl<std::index_sequence<Indexes...>> : Concept {
-  template <class Functor, class Tuple>
-  auto require(Functor&& functor, Tuple&& tuple)
-      -> list<valid<decltype(htl::make_tuple(
-          functor(get<Indexes>(std::forward<Tuple>(tuple)))...))>()>;
-};
+template <std::size_t... Indexes, class Functor, class Tuple>
+auto apply_map(std::index_sequence<Indexes...>, Functor&& functor,
+               Tuple&& tuple)
+    -> decltype(htl::make_tuple(functor(get<Indexes>(tuple))...));
 
 struct Mappable : Concept {
   template <class Functor, class Tuple>
   auto require(Functor&& functor, Tuple&& tuple)
       -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
-              models<MappableImpl<std::make_index_sequence<
-                         tuple_traits::num_elements<uncvref_t<Tuple>>()>>,
-                     Functor, Tuple>()>;
+              htl::concept::tuple<decltype(apply_map(
+                  std::make_index_sequence<
+                      tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+                  functor, tuple))>()>;
 };
 }
 }
@@ -160,19 +153,18 @@ constexpr bool applicable_predicate() {
 namespace detail {
 namespace concept {
 
-template <class>
-struct ApplicableBinaryPredicateImpl {};
+template <std::size_t... Indexes, class Predicate, class TupleLhs,
+          class TupleRhs>
+auto applicable_binary_predicate_impl(std::index_sequence<Indexes...>,
+                                      Predicate&& predicate,
+                                      TupleLhs&& tuple_lhs,
+                                      TupleRhs&& tuple_rhs)
+    -> std::integral_constant<bool,
+                              and_c<boolean<decltype(predicate(
+                                  htl::get<Indexes>(tuple_lhs),
+                                  htl::get<Indexes>(tuple_rhs)))>()...>()>;
 
-template <std::size_t... Indexes>
-struct ApplicableBinaryPredicateImpl<std::index_sequence<Indexes...>>
-    : Concept {
-  template <class Predicate, class TupleLhs, class TupleRhs>
-  auto require(Predicate&& predicate, TupleLhs&& tuple_lhs,
-               TupleRhs&& tuple_rhs)
-      -> list<and_c<
-          boolean<decltype(predicate(htl::get<Indexes>(tuple_lhs),
-                                     htl::get<Indexes>(tuple_rhs)))>()...>()>;
-};
+inline auto applicable_binary_predicate_impl(...) -> std::false_type;
 
 struct ApplicableBinaryPredicate : Concept {
   template <class Predicate, class TupleLhs, class TupleRhs>
@@ -182,9 +174,10 @@ struct ApplicableBinaryPredicate : Concept {
               htl::concept::tuple<uncvref_t<TupleRhs>>(),
               tuple_traits::num_elements<uncvref_t<TupleLhs>>() ==
                   tuple_traits::num_elements<uncvref_t<TupleRhs>>(),
-              models<ApplicableBinaryPredicateImpl<std::make_index_sequence<
-                         tuple_traits::num_elements<uncvref_t<TupleLhs>>()>>,
-                     Predicate, TupleLhs, TupleRhs>()>;
+              boolean_true_constant<decltype(applicable_binary_predicate_impl(
+                  std::make_index_sequence<
+                      tuple_traits::num_elements<uncvref_t<TupleLhs>>()>(),
+                  predicate, tuple_lhs, tuple_rhs))>()>;
 };
 }
 }
@@ -202,24 +195,22 @@ constexpr bool applicable_binary_predicate() {
 namespace detail {
 namespace concept {
 
-template <class>
-struct ApplicableConstantPredicateImpl {};
+template <std::size_t... Indexes, class Predicate, class Tuple>
+auto applicable_constant_predicate_impl(std::index_sequence<Indexes...>,
+                                        Predicate&& predicate, Tuple&& tuple)
+    -> std::integral_constant<bool, and_c<boolean_constant<decltype(predicate(
+                                        htl::get<Indexes>(tuple)))>()...>()>;
 
-template <std::size_t... Indexes>
-struct ApplicableConstantPredicateImpl<std::index_sequence<Indexes...>>
-    : Concept {
-  template <class Predicate, class Tuple>
-  auto require(Predicate&& predicate, Tuple&& tuple) -> list<and_c<
-      boolean_constant<decltype(predicate(htl::get<Indexes>(tuple)))>()...>()>;
-};
+inline auto applicable_constant_predicate_impl(...) -> std::false_type;
 
 struct ApplicableConstantPredicate : Concept {
   template <class Predicate, class Tuple>
   auto require(Predicate&& predicate, Tuple&& tuple)
       -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
-              models<ApplicableConstantPredicateImpl<std::make_index_sequence<
-                         tuple_traits::num_elements<uncvref_t<Tuple>>()>>,
-                     Predicate, Tuple>()>;
+              boolean_true_constant<decltype(applicable_constant_predicate_impl(
+                  std::make_index_sequence<
+                      tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+                  predicate, tuple))>()>;
 };
 }
 }
