@@ -91,19 +91,65 @@ constexpr bool boolean_constant() {
 namespace detail {
 namespace concept {
 
-template <std::size_t... Indexes, class Functor, class Tuple>
+template <std::size_t Index, class Functor, class... Tuples>
+auto apply_map_element(Functor&& functor, Tuples&&... tuples)
+    -> decltype(std::forward<Functor>(functor)(
+        htl::get<Index>(std::forward<Tuples>(tuples))...));
+
+template<std::size_t Index, class Functor, class... Tuples>
+using apply_map_element_type = decltype(
+  apply_map_element<Index>(std::declval<Functor>(), std::declval<Tuples>()...)
+);
+
+template<std::size_t... Indexes, class Functor, class... Tuples>
 auto apply_map(std::index_sequence<Indexes...>, Functor&& functor,
-               Tuple&& tuple)
-    -> decltype(htl::make_tuple(functor(get<Indexes>(tuple))...));
+  Tuples&&... tuples) 
+  -> decltype(
+    htl::Tuple
+    // <
+    //   apply_map_element_type<Indexes, Functor, Tuples...>...
+    // >
+    <
+    decltype(
+      apply_map_element<Indexes>(std::forward<Functor>(functor),
+      std::forward<Tuples>(tuples)...)
+      )...
+    >
+    (
+      apply_map_element<Indexes>(std::forward<Functor>(functor),
+      std::forward<Tuples>(tuples)...)...
+      )
+  );
+
+// template <std::size_t... Indexes, class Functor, class Tuple>
+// auto apply_map(std::index_sequence<Indexes...>, Functor&& functor,
+//                Tuple&& tuple)
+//     -> decltype(htl::make_tuple(functor(get<Indexes>(tuple))...));
+//
+// struct Mappable : Concept {
+//   template <class Functor, class Tuple>
+//   auto require(Functor&& functor, Tuple&& tuple)
+//       -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
+//               htl::concept::tuple<decltype(apply_map(
+//                   std::make_index_sequence<
+//                       tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+//                   functor, tuple))>()>;
+// };
 
 struct Mappable : Concept {
-  template <class Functor, class Tuple>
-  auto require(Functor&& functor, Tuple&& tuple)
-      -> list<htl::concept::tuple<uncvref_t<Tuple>>(),
-              htl::concept::tuple<decltype(apply_map(
-                  std::make_index_sequence<
-                      tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
-                  functor, tuple))>()>;
+  template<class Functor, class TupleFirst, class... TuplesRest>
+  auto require(Functor&& functor, TupleFirst&& tuple_first, TuplesRest&&... tuples_rest) ->
+    list<
+      htl::concept::tuple<uncvref_t<TupleFirst>>()
+      ,
+      htl::concept::tuple<decltype(
+        apply_map(
+          std::make_index_sequence<tuple_traits::num_elements<uncvref_t<TupleFirst>>()>(),
+            std::forward<Functor>(functor), 
+            std::forward<TupleFirst>(tuple_first),
+            std::forward<TuplesRest>(tuples_rest)...)
+      )>()
+    >;
 };
 }
 }

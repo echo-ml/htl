@@ -177,6 +177,19 @@ auto right(Tuple&& tuple) -> copy_cv_qualifiers<
       htl::get<tuple_traits::num_elements<uncvref_t<Tuple>>() - N>(tuple));
 }
 
+///////////
+// slice //
+///////////
+
+template <int I, int J, class Tuple,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
+          CONCEPT_REQUIRES(I >= 0 &&
+                           J <= tuple_traits::num_elements<uncvref_t<Tuple>>())>
+decltype(auto) splice(Tuple&& tuple) {
+  constexpr int N = tuple_traits::num_elements<uncvref_t<Tuple>>();
+  return left<J - I>(right<N - I>(std::forward<Tuple>(tuple)));
+}
+
 //////////
 // tail //
 //////////
@@ -192,6 +205,15 @@ decltype(auto) tail(Tuple&& tuple) {
 /////////
 // map //
 /////////
+
+namespace detail { namespace algorithm {
+
+template<std::size_t I, class Functor, class... Tuples>
+auto apply_impl(const Functor& functor, Tuples&&... tuples) {
+  return functor(htl::get<I>(std::forward<Tuples>(tuples))...);
+}
+
+}}
 
 namespace detail {
 namespace algorithm {

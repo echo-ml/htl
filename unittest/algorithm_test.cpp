@@ -33,6 +33,14 @@ TEST_CASE("right") {
 
 }
 
+TEST_CASE("splice") {
+  Tuple<double, int, short, char> t1(1, 2, 3, 'a');
+  decltype(auto) t2 = splice<1, 3>(t1);
+  type_equal<decltype(t2), Tuple<int, short>&>();
+  CHECK(htl::get<0>(t2) == 2);
+  CHECK(htl::get<1>(t2) == 3);
+}
+
 TEST_CASE("map") {
   auto t1 = make_tuple(1, 2.0);
   auto f1 = [](auto x) { return x + 2; };
