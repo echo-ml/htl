@@ -51,6 +51,17 @@ TEST_CASE("map") {
   CHECK(get<1>(t2) == 4.0);
 }
 
+TEST_CASE("map2") {
+  auto t1 = make_tuple(1.0, 3);
+  auto t2 = make_tuple(2, 7.0);
+  auto t3 = map([](auto x, auto y) -> decltype(x+y) { return x+y; }, t1, t2);
+
+  type_equal<decltype(t3), htl::Tuple<double, double>>();
+
+  CHECK(htl::get<0>(t3) == 3.0);
+  CHECK(htl::get<1>(t3) == 10.0);
+}
+
 TEST_CASE("remove_if") {
   auto t1 = make_tuple(3, 3.0, 5ul);
   auto pred = [](auto x) { return std::is_floating_point<decltype(x)>(); };

@@ -206,33 +206,36 @@ decltype(auto) tail(Tuple&& tuple) {
 // map //
 /////////
 
-namespace detail { namespace algorithm {
-
-template<std::size_t I, class Functor, class... Tuples>
-auto apply_impl(const Functor& functor, Tuples&&... tuples) {
-  return functor(htl::get<I>(std::forward<Tuples>(tuples))...);
-}
-
-}}
-
 namespace detail {
 namespace algorithm {
 
-template <std::size_t... Indexes, class Functor, class Tuple>
+template <std::size_t I, class Functor, class... Tuples>
+auto apply_impl(Functor&& functor, Tuples&&... tuples) {
+  return std::forward<Functor>(functor)(
+      htl::get<I>(std::forward<Tuples>(tuples))...);
+}
+
+template <std::size_t... Indexes, class Functor, class... Tuples>
 auto map_impl(std::index_sequence<Indexes...>, Functor&& functor,
-              Tuple&& tuple) {
-  return htl::make_tuple(functor(get<Indexes>(std::forward<Tuple>(tuple)))...);
+              Tuples&&... tuples) {
+  return htl::Tuple<decltype(apply_impl<Indexes>(
+      std::forward<Functor>(functor), std::forward<Tuples>(tuples)...))...>(
+      apply_impl<Indexes>(std::forward<Functor>(functor),
+                          std::forward<Tuples>(tuples)...)...);
 }
 }
 }
 
-template <class Functor, class Tuple,
-          CONCEPT_REQUIRES(concept::mappable<Functor, Tuple>())>
-auto map(Functor&& functor, Tuple&& tuple) {
+template <
+    class Functor, class TupleFirst, class... TuplesRest,
+    CONCEPT_REQUIRES(concept::mappable<Functor, TupleFirst, TuplesRest...>())>
+auto map(Functor&& functor, TupleFirst&& tuple_first,
+         TuplesRest&&... tuples_rest) {
   return detail::algorithm::map_impl(
       std::make_index_sequence<
-          tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
-      std::forward<Functor>(functor), std::forward<Tuple>(tuple));
+          tuple_traits::num_elements<uncvref_t<TupleFirst>>()>(),
+      std::forward<Functor>(functor), std::forward<TupleFirst>(tuple_first),
+      std::forward<TuplesRest>(tuples_rest)...);
 }
 
 ////////////////////////
