@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/htl/integral_constant.h>
+#include <echo/htl/integer_sequence.h>
 #include <echo/htl/tuple.h>
 #include <echo/htl/concept.h>
 
@@ -27,6 +28,19 @@ template <std::size_t... Indexes, class Tuple_,
               Indexes >= 0 &&
               Indexes < tuple_traits::num_elements<uncvref_t<Tuple_>>())...>())>
 auto make_subtuple(std::index_sequence<Indexes...> indexes, Tuple_&& tuple)
+    -> decltype(
+        Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+            htl::get<Indexes>(std::forward<Tuple_>(tuple))...)) {
+  return Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
+      htl::get<Indexes>(std::forward<Tuple_>(tuple))...);
+}
+
+template <std::size_t... Indexes, class Tuple_,
+          CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple_>>()),
+          CONCEPT_REQUIRES(and_c<(
+              Indexes >= 0 &&
+              Indexes < tuple_traits::num_elements<uncvref_t<Tuple_>>())...>())>
+auto make_subtuple(htl::index_sequence<Indexes...> indexes, Tuple_&& tuple)
     -> decltype(
         Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
             htl::get<Indexes>(std::forward<Tuple_>(tuple))...)) {
@@ -185,7 +199,7 @@ template <int I, int J, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
           CONCEPT_REQUIRES(I >= 0 &&
                            J <= tuple_traits::num_elements<uncvref_t<Tuple>>())>
-decltype(auto) splice(Tuple&& tuple) {
+decltype(auto) slice(Tuple&& tuple) {
   constexpr int N = tuple_traits::num_elements<uncvref_t<Tuple>>();
   return left<J - I>(right<N - I>(std::forward<Tuple>(tuple)));
 }

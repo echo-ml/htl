@@ -33,9 +33,9 @@ TEST_CASE("right") {
 
 }
 
-TEST_CASE("splice") {
+TEST_CASE("slice") {
   Tuple<double, int, short, char> t1(1, 2, 3, 'a');
-  decltype(auto) t2 = splice<1, 3>(t1);
+  decltype(auto) t2 = slice<1, 3>(t1);
   type_equal<decltype(t2), Tuple<int, short>&>();
   CHECK(htl::get<0>(t2) == 2);
   CHECK(htl::get<1>(t2) == 3);
