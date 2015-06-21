@@ -40,7 +40,8 @@ template <std::size_t... Indexes, class Tuple_,
           CONCEPT_REQUIRES(and_c<(
               Indexes >= 0 &&
               Indexes < tuple_traits::num_elements<uncvref_t<Tuple_>>())...>())>
-auto make_subtuple(htl::index_sequence<Indexes...> indexes, Tuple_&& tuple)
+auto make_subtuple(htl::integer_sequence<std::size_t, Indexes...> indexes,
+                   Tuple_&& tuple)
     -> decltype(
         Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...>(
             htl::get<Indexes>(std::forward<Tuple_>(tuple))...)) {
