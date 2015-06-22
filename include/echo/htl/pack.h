@@ -2,7 +2,7 @@
 
 #include <type_traits>
 #include <utility>
-#include <echo/concept2.h>
+#include <echo/concept.h>
 
 namespace echo {
 // Pack is intended to be used with empty-base-class-optimization, so prevent

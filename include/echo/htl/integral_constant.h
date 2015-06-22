@@ -1,6 +1,6 @@
 #pragma once
 
-#include <echo/concept2.h>
+#include <echo/concept.h>
 #include <type_traits>
 
 namespace echo {

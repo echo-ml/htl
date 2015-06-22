@@ -374,7 +374,6 @@ template <
                      concept::boolean_false_constant<decltype(std::declval<
                          Predicate>()(htl::head(std::declval<Tuple>())))>())>
 auto find_if_impl(Index i, const Predicate& predicate, Tuple&& tuple) {
-  htl::integral_constant<int, 1> one;
   return find_if_impl(i + htl::integral_constant<int, 1>(), predicate,
                       htl::tail(tuple));
 }

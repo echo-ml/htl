@@ -49,7 +49,7 @@ TEST_CASE("tuple") {
   }
 
   SECTION("make_tuple") {
-    auto t1 = make_tuple(1, 2.0);
-    CHECK(std::is_same<decltype(t1), Tuple<int, double>>::value);
+    auto t6 = make_tuple(1, 2.0);
+    CHECK(std::is_same<decltype(t6), Tuple<int, double>>::value);
   }
 }

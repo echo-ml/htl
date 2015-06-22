@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/htl/tuple.h>
+#include <echo/concept.h>
 
 namespace echo {
 namespace htl {

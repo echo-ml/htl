@@ -34,7 +34,7 @@ TEST_CASE("right") {
 }
 
 TEST_CASE("slice") {
-  Tuple<double, int, short, char> t1(1, 2, 3, 'a');
+  Tuple<double, int, short, char> t1(1, 2, static_cast<short>(3), 'a');
   decltype(auto) t2 = slice<1, 3>(t1);
   type_equal<decltype(t2), Tuple<int, short>&>();
   CHECK(htl::get<0>(t2) == 2);
