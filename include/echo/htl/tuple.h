@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_tuple
+
 #include <echo/htl/pack.h>
 #include <echo/htl/utility.h>
 #include <echo/variadic_operator.h>
@@ -7,8 +9,7 @@
 namespace echo {
 namespace htl {
 
-namespace detail {
-namespace tuple {
+namespace DETAIL_NS {
 
 /////////
 // tag //
@@ -39,30 +40,28 @@ struct TupleBase<std::index_sequence<Indexes...>, Values...>
   }
 };
 }
-}
 
 ///////////
 // Tuple //
 ///////////
 
 template <class... Values>
-class Tuple
-    : detail::tuple::TupleBase<std::make_index_sequence<sizeof...(Values)>,
-                               Values...> {
+class Tuple : DETAIL_NS::TupleBase<std::make_index_sequence<sizeof...(Values)>,
+                                   Values...> {
  public:
-  using detail::tuple::TupleBase<std::make_index_sequence<sizeof...(Values)>,
-                                 Values...>::TupleBase;
+  using DETAIL_NS::TupleBase<std::make_index_sequence<sizeof...(Values)>,
+                             Values...>::TupleBase;
   template <int I, CONCEPT_REQUIRES((I >= 0) && (I < sizeof...(Values)))>
   decltype(auto) value() & {
-    return unpack<detail::tuple::tag<I>>(*this);
+    return unpack<DETAIL_NS::tag<I>>(*this);
   }
   template <int I, CONCEPT_REQUIRES((I >= 0) && (I < sizeof...(Values)))>
   decltype(auto) value() const & {
-    return unpack<detail::tuple::tag<I>>(*this);
+    return unpack<DETAIL_NS::tag<I>>(*this);
   }
   template <int I, CONCEPT_REQUIRES((I >= 0) && (I < sizeof...(Values)))>
   decltype(auto) value() && {
-    return unpack<detail::tuple::tag<I>>(std::move(*this));
+    return unpack<DETAIL_NS::tag<I>>(std::move(*this));
   }
 };
 
@@ -82,9 +81,7 @@ namespace tuple_traits {
 // num_elements //
 //////////////////
 
-namespace detail {
-namespace tuple {
-
+namespace DETAIL_NS {
 template <class>
 struct num_elements_impl {};
 
@@ -93,21 +90,18 @@ struct num_elements_impl<Tuple<Values...>> {
   static constexpr int value = sizeof...(Values);
 };
 }
-}
 
 template <class T>
 constexpr auto num_elements()
-    -> decltype(detail::tuple::num_elements_impl<T>::value) {
-  return detail::tuple::num_elements_impl<T>::value;
+    -> decltype(DETAIL_NS::num_elements_impl<T>::value) {
+  return DETAIL_NS::num_elements_impl<T>::value;
 }
 
 //////////////////
 // element_type //
 //////////////////
 
-namespace detail {
-namespace tuple {
-
+namespace DETAIL_NS {
 template <int, class>
 struct element_type_impl {};
 
@@ -121,10 +115,9 @@ struct element_type_impl<0, Tuple<ValueFirst, ValuesRest...>> {
   using type = ValueFirst;
 };
 }
-}
 
 template <int I, class T>
-using element_type = typename detail::tuple::element_type_impl<I, T>::type;
+using element_type = typename DETAIL_NS::element_type_impl<I, T>::type;
 }
 
 /////////
@@ -150,3 +143,5 @@ decltype(auto) get(Tuple<Values...>&& tuple) {
 }
 }
 }
+
+#undef DETAIL_NS

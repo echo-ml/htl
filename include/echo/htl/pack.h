@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_pack
+
 #include <type_traits>
 #include <utility>
 #include <echo/concept.h>
@@ -13,7 +15,7 @@ namespace empty_base_class_namespace {
 // PackBase //
 //////////////
 
-namespace detail {
+namespace DETAIL_NS {
 
 template <class Tag, class Value, bool IsValueEmpty>
 struct PackBase {};
@@ -56,8 +58,8 @@ struct PackBase<Tag, Value, false> {
 //////////
 
 template <class Tag, class Value = Tag>
-struct Pack : detail::PackBase<Tag, Value, std::is_empty<Value>::value> {
-  using detail::PackBase<Tag, Value, std::is_empty<Value>::value>::PackBase;
+struct Pack : DETAIL_NS::PackBase<Tag, Value, std::is_empty<Value>::value> {
+  using DETAIL_NS::PackBase<Tag, Value, std::is_empty<Value>::value>::PackBase;
 };
 
 ////////////
@@ -78,17 +80,6 @@ template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>&& pack) {
   return std::move(pack).value();
 }
-
-// these verisions won't work with intel c++ compiler
-// template<class Tag, class Value>
-// decltype(auto) unpack(Tag, Pack<Tag, Value>& pack) {
-//   return pack.value();
-// }
-//
-// template<class Tag, class Value>
-// decltype(auto) unpack(Tag, const Pack<Tag, Value>& pack) {
-//   return pack.value();
-// }
 }
 
 namespace htl {
@@ -97,3 +88,5 @@ using empty_base_class_namespace::Pack;
 using empty_base_class_namespace::unpack;
 }
 }
+
+#undef DETAIL_NS

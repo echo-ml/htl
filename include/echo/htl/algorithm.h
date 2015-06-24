@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_algorithm
+
 #include <echo/htl/integral_constant.h>
 #include <echo/htl/integer_sequence.h>
 #include <echo/htl/tuple.h>
@@ -53,8 +55,7 @@ auto make_subtuple(htl::integer_sequence<std::size_t, Indexes...> indexes,
 // append //
 ////////////
 
-namespace detail {
-namespace algorithm {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Value, class Tuple_>
 auto append_impl(std::index_sequence<Indexes...>, Value&& value, Tuple_&& tuple)
     -> decltype(Tuple<tuple_traits::element_type<Indexes, uncvref_t<Tuple_>>...,
@@ -67,16 +68,13 @@ auto append_impl(std::index_sequence<Indexes...>, Value&& value, Tuple_&& tuple)
       std::forward<Value>(value));
 }
 }
-}
 
 template <class Value, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>())>
-auto append(Value&& value, Tuple&& tuple)
-    -> decltype(detail::algorithm::append_impl(
-        std::make_index_sequence<
-            tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
-        std::forward<Value>(value), std::forward<Tuple>(tuple))) {
-  return detail::algorithm::append_impl(
+auto append(Value&& value, Tuple&& tuple) -> decltype(DETAIL_NS::append_impl(
+    std::make_index_sequence<tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+    std::forward<Value>(value), std::forward<Tuple>(tuple))) {
+  return DETAIL_NS::append_impl(
       std::make_index_sequence<
           tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
       std::forward<Value>(value), std::forward<Tuple>(tuple));
@@ -86,8 +84,7 @@ auto append(Value&& value, Tuple&& tuple)
 // prepend //
 /////////////
 
-namespace detail {
-namespace algorithm {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Value, class Tuple_>
 auto prepend_impl(std::index_sequence<Indexes...>, Value&& value,
                   Tuple_&& tuple)
@@ -102,16 +99,13 @@ auto prepend_impl(std::index_sequence<Indexes...>, Value&& value,
       htl::get<Indexes>(std::forward<Tuple_>(tuple))...);
 }
 }
-}
 
 template <class Value, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>())>
-auto prepend(Value&& value, Tuple&& tuple)
-    -> decltype(detail::algorithm::prepend_impl(
-        std::make_index_sequence<
-            tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
-        std::forward<Value>(value), std::forward<Tuple>(tuple))) {
-  return detail::algorithm::prepend_impl(
+auto prepend(Value&& value, Tuple&& tuple) -> decltype(DETAIL_NS::prepend_impl(
+    std::make_index_sequence<tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
+    std::forward<Value>(value), std::forward<Tuple>(tuple))) {
+  return DETAIL_NS::prepend_impl(
       std::make_index_sequence<
           tuple_traits::num_elements<uncvref_t<Tuple>>()>(),
       std::forward<Value>(value), std::forward<Tuple>(tuple));
@@ -121,9 +115,7 @@ auto prepend(Value&& value, Tuple&& tuple)
 // left //
 //////////
 
-namespace detail {
-namespace algorithm {
-
+namespace DETAIL_NS {
 template <class, class>
 struct left_impl {};
 
@@ -135,26 +127,25 @@ struct left_impl<std::index_sequence<Indexes...>, Tuple<Values...>> {
 template <class Indexes, class Tuple>
 using left_impl_t = typename left_impl<Indexes, Tuple>::type;
 }
-}
 
 template <
     int N, class Tuple, CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
     CONCEPT_REQUIRES((N >= 0) &&
                      (N <= tuple_traits::num_elements<uncvref_t<Tuple>>()))>
 auto left(Tuple&& tuple) -> copy_cv_qualifiers<
-    Tuple, detail::algorithm::left_impl_t<std::make_index_sequence<N>,
-                                          uncvref_t<Tuple>>> {
+    Tuple,
+    DETAIL_NS::left_impl_t<std::make_index_sequence<N>, uncvref_t<Tuple>>> {
   return reinterpret_cast<copy_cv_qualifiers<
-      Tuple, detail::algorithm::left_impl_t<std::make_index_sequence<N>,
-                                            uncvref_t<Tuple>>>>(tuple);
+      Tuple,
+      DETAIL_NS::left_impl_t<std::make_index_sequence<N>, uncvref_t<Tuple>>>>(
+      tuple);
 }
 
 ///////////
 // right //
 ///////////
 
-namespace detail {
-namespace algorithm {
+namespace DETAIL_NS {
 
 template <int, class, class>
 struct right_impl {};
@@ -170,7 +161,6 @@ using right_impl_t =
     typename right_impl<tuple_traits::num_elements<Tuple>() - Indexes::size(),
                         Indexes, Tuple>::type;
 }
-}
 
 template <int N, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
@@ -184,11 +174,11 @@ template <int N, class Tuple,
           CONCEPT_REQUIRES(
               (N > 0) && (N <= tuple_traits::num_elements<uncvref_t<Tuple>>()))>
 auto right(Tuple&& tuple) -> copy_cv_qualifiers<
-    Tuple, detail::algorithm::right_impl_t<std::make_index_sequence<N>,
-                                           uncvref_t<Tuple>>> {
+    Tuple,
+    DETAIL_NS::right_impl_t<std::make_index_sequence<N>, uncvref_t<Tuple>>> {
   return reinterpret_cast<copy_cv_qualifiers<
-      Tuple, detail::algorithm::right_impl_t<std::make_index_sequence<N>,
-                                             uncvref_t<Tuple>>>>(
+      Tuple,
+      DETAIL_NS::right_impl_t<std::make_index_sequence<N>, uncvref_t<Tuple>>>>(
       htl::get<tuple_traits::num_elements<uncvref_t<Tuple>>() - N>(tuple));
 }
 
@@ -221,9 +211,7 @@ decltype(auto) tail(Tuple&& tuple) {
 // map //
 /////////
 
-namespace detail {
-namespace algorithm {
-
+namespace DETAIL_NS {
 template <std::size_t I, class Functor, class... Tuples>
 auto apply_impl(Functor&& functor, Tuples&&... tuples) {
   return std::forward<Functor>(functor)(
@@ -239,14 +227,13 @@ auto map_impl(std::index_sequence<Indexes...>, Functor&& functor,
                           std::forward<Tuples>(tuples)...)...);
 }
 }
-}
 
 template <
     class Functor, class TupleFirst, class... TuplesRest,
     CONCEPT_REQUIRES(concept::mappable<Functor, TupleFirst, TuplesRest...>())>
 auto map(Functor&& functor, TupleFirst&& tuple_first,
          TuplesRest&&... tuples_rest) {
-  return detail::algorithm::map_impl(
+  return DETAIL_NS::map_impl(
       std::make_index_sequence<
           tuple_traits::num_elements<uncvref_t<TupleFirst>>()>(),
       std::forward<Functor>(functor), std::forward<TupleFirst>(tuple_first),
@@ -257,8 +244,7 @@ auto map(Functor&& functor, TupleFirst&& tuple_first,
 // type_match_indexes //
 ////////////////////////
 
-namespace detail {
-namespace algorithm {
+namespace DETAIL_NS {
 
 template <class, int, class, class Result>
 struct type_match_indexes_impl {
@@ -281,7 +267,6 @@ using type_match_indexes =
     typename type_match_indexes_impl<T, 0, BooleanTuple,
                                      std::index_sequence<>>::type;
 }
-}
 
 ///////////////
 // partition //
@@ -294,9 +279,9 @@ template <class Predicate, class Tuple,
 auto partition(const Predicate& predicate, Tuple&& tuple) {
   using BooleanTuple = decltype(map(predicate, tuple));
   using TrueIndexes =
-      detail::algorithm::type_match_indexes<std::true_type, BooleanTuple>;
+      DETAIL_NS::type_match_indexes<std::true_type, BooleanTuple>;
   using FalseIndexes =
-      detail::algorithm::type_match_indexes<std::false_type, BooleanTuple>;
+      DETAIL_NS::type_match_indexes<std::false_type, BooleanTuple>;
   return make_tuple(make_subtuple(TrueIndexes(), std::forward<Tuple>(tuple)),
                     make_subtuple(FalseIndexes(), std::forward<Tuple>(tuple)));
 }
@@ -312,7 +297,7 @@ template <class Predicate, class Tuple,
 auto remove_if(const Predicate& predicate, Tuple&& tuple) {
   using BooleanTuple = decltype(map(predicate, tuple));
   using FalseIndexes =
-      detail::algorithm::type_match_indexes<std::false_type, BooleanTuple>;
+      DETAIL_NS::type_match_indexes<std::false_type, BooleanTuple>;
   return make_subtuple(FalseIndexes(), std::forward<Tuple>(tuple));
 }
 
@@ -342,8 +327,7 @@ auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
 // find_if //
 /////////////
 
-namespace detail {
-namespace algorithm {
+namespace DETAIL_NS {
 template <class Index, class Predicate, class Tuple,
           CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
 auto find_if_impl(Index, const Predicate&, Tuple&&) {
@@ -390,13 +374,12 @@ int find_if_impl(Index i, const Predicate& predicate, Tuple&& tuple) {
     return find_if_impl(i + 1, predicate, htl::tail(tuple));
 }
 }
-}
 
 template <class Predicate, class Tuple,
           CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>())>
 auto find_if(const Predicate& predicate, Tuple&& tuple) {
-  return detail::algorithm::find_if_impl(htl::integral_constant<int, 0>(),
-                                         predicate, tuple);
+  return DETAIL_NS::find_if_impl(htl::integral_constant<int, 0>(), predicate,
+                                 tuple);
 }
 
 //////////////
@@ -419,3 +402,5 @@ auto count_if(const Predicate& predicate, Tuple&& tuple) {
 }
 }
 }
+
+#undef DETAIL_NS

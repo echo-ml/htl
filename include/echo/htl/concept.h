@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_concept
+
 #include <echo/htl/tuple.h>
 #include <echo/concept.h>
 
@@ -11,9 +13,7 @@ namespace concept {
 // tuple //
 ///////////
 
-namespace detail {
-namespace tuple {
-
+namespace DETAIL_NS {
 template <class>
 struct tuple_impl {
   static constexpr bool value = false;
@@ -24,11 +24,10 @@ struct tuple_impl<Tuple<Values...>> {
   static constexpr bool value = true;
 };
 }
-}
 
 template <class T>
 constexpr bool tuple() {
-  return detail::tuple::tuple_impl<T>::value;
+  return DETAIL_NS::tuple_impl<T>::value;
 }
 
 /////////////
@@ -44,36 +43,32 @@ constexpr bool boolean() {
 // boolean_true_constant //
 ///////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct BooleanTrueConstant : Concept {
   template <class T>
   auto require(T && ) -> list<boolean<T>(), static_cast<bool>(T::value)>;
 };
 }
-}
 
 template <class T>
 constexpr bool boolean_true_constant() {
-  return models<detail::concept::BooleanTrueConstant, T>();
+  return models<DETAIL_NS::BooleanTrueConstant, T>();
 }
 
 ////////////////////////////
 // boolean_false_constant //
 ////////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct BooleanFalseConstant : Concept {
   template <class T>
   auto require(T && ) -> list<boolean<T>(), static_cast<bool>(!T::value)>;
 };
 }
-}
 
 template <class T>
 constexpr bool boolean_false_constant() {
-  return models<detail::concept::BooleanFalseConstant, T>();
+  return models<DETAIL_NS::BooleanFalseConstant, T>();
 }
 
 //////////////////////
@@ -89,12 +84,10 @@ constexpr bool boolean_constant() {
 // mappable //
 //////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <std::size_t Index, class Functor, class... Tuples>
 auto apply_map_element(Functor&& functor, Tuples&&... tuples)
-  -> decltype(functor(htl::get<Index>(std::forward<Tuples>(tuples))...));
+    -> decltype(functor(htl::get<Index>(std::forward<Tuples>(tuples))...));
 
 template <std::size_t... Indexes, class Functor, class... Tuples>
 auto apply_map(std::index_sequence<Indexes...>, Functor&& functor,
@@ -119,20 +112,17 @@ struct Mappable : Concept {
                   std::declval<TuplesRest>()...))>()>;
 };
 }
-}
 
 template <class Functor, class... Tuples>
 constexpr bool mappable() {
-  return models<detail::concept::Mappable, Functor, Tuples...>();
+  return models<DETAIL_NS::Mappable, Functor, Tuples...>();
 }
 
 //////////////////////////
 // applicable_predicate //
 //////////////////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <class>
 struct ApplicablePredicateImpl {};
 
@@ -152,20 +142,17 @@ struct ApplicablePredicate : Concept {
                      Predicate, Tuple>()>;
 };
 }
-}
 
 template <class Predicate, class Tuple>
 constexpr bool applicable_predicate() {
-  return models<detail::concept::ApplicablePredicate, Predicate, Tuple>();
+  return models<DETAIL_NS::ApplicablePredicate, Predicate, Tuple>();
 }
 
 /////////////////////////////////
 // applicable_binary_predicate //
 /////////////////////////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Predicate, class TupleLhs,
           class TupleRhs>
 auto applicable_binary_predicate_impl(std::index_sequence<Indexes...>,
@@ -193,11 +180,10 @@ struct ApplicableBinaryPredicate : Concept {
                   predicate, tuple_lhs, tuple_rhs))>()>;
 };
 }
-}
 
 template <class Predicate, class TupleLhs, class TupleRhs>
 constexpr bool applicable_binary_predicate() {
-  return models<detail::concept::ApplicableBinaryPredicate, Predicate, TupleLhs,
+  return models<DETAIL_NS::ApplicableBinaryPredicate, Predicate, TupleLhs,
                 TupleRhs>();
 }
 
@@ -205,9 +191,7 @@ constexpr bool applicable_binary_predicate() {
 // applicable_constant_predicate //
 ///////////////////////////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Predicate, class Tuple>
 auto applicable_constant_predicate_impl(std::index_sequence<Indexes...>,
                                         Predicate&& predicate, Tuple&& tuple)
@@ -226,21 +210,17 @@ struct ApplicableConstantPredicate : Concept {
                   predicate, tuple))>()>;
 };
 }
-}
 
 template <class Predicate, class Tuple>
 constexpr bool applicable_constant_predicate() {
-  return models<detail::concept::ApplicableConstantPredicate, Predicate,
-                Tuple>();
+  return models<DETAIL_NS::ApplicableConstantPredicate, Predicate, Tuple>();
 }
 
 ///////////////////
 // left_foldable //
 ///////////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <int I, int N>
 struct LeftFoldableImpl : Concept {
   template <class Functor, class X, class Tuple>
@@ -268,12 +248,13 @@ struct LeftFoldable : Concept {
                      Functor, X0, Tuple>()>;
 };
 }
-}
 
 template <class Functor, class X0, class Tuple>
 constexpr bool left_foldable() {
-  return models<detail::concept::LeftFoldable, Functor, X0, Tuple>();
+  return models<DETAIL_NS::LeftFoldable, Functor, X0, Tuple>();
 }
 }
 }
 }
+
+#undef DETAIL_NS

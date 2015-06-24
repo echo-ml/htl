@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_integer_sequence
+
 #include <echo/htl/tuple.h>
 #include <echo/htl/integral_constant.h>
 #include <utility>
@@ -25,9 +27,7 @@ using index_sequence = integer_sequence<std::size_t, Ix...>;
 // make_integer_sequence //
 ///////////////////////////
 
-namespace detail {
-namespace integer_sequence {
-
+namespace DETAIL_NS {
 template <class Integer, Integer Offset, Integer... Ix>
 auto make_integer_sequence_impl(std::integer_sequence<Integer, Ix...>) {
   return htl::integer_sequence<Integer, (Ix + Offset)...>();
@@ -46,12 +46,10 @@ auto make_integer_sequence_impl(htl::integral_constant<Integer, A>,
       std::make_integer_sequence<Integer, (B - A)>());
 }
 }
-}
 
 template <class Integer, Integer... Ix>
-using make_integer_sequence =
-    decltype(detail::integer_sequence::make_integer_sequence_impl(
-        htl::integral_constant<Integer, Ix>()...));
+using make_integer_sequence = decltype(DETAIL_NS::make_integer_sequence_impl(
+    htl::integral_constant<Integer, Ix>()...));
 
 /////////////////////////
 // make_index_sequence //
@@ -61,3 +59,5 @@ template <std::size_t... Ix>
 using make_index_sequence = htl::make_integer_sequence<std::size_t, Ix...>;
 }
 }
+
+#undef DETAIL_NS
