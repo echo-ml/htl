@@ -11,17 +11,15 @@ namespace htl {
 
 namespace DETAIL_NS {
 
-/////////
-// tag //
-/////////
-
+//------------------------------------------------------------------------------
+// tag
+//------------------------------------------------------------------------------
 template <int I>
 struct tag {};
 
-///////////////
-// TupleBase //
-///////////////
-
+//------------------------------------------------------------------------------
+// TupleBase
+//------------------------------------------------------------------------------
 template <class, class... Values>
 struct TupleBase {};
 
@@ -41,10 +39,9 @@ struct TupleBase<std::index_sequence<Indexes...>, Values...>
 };
 }
 
-///////////
-// Tuple //
-///////////
-
+//------------------------------------------------------------------------------
+// Tuple
+//------------------------------------------------------------------------------
 template <class... Values>
 class Tuple : DETAIL_NS::TupleBase<std::make_index_sequence<sizeof...(Values)>,
                                    Values...> {
@@ -65,10 +62,9 @@ class Tuple : DETAIL_NS::TupleBase<std::make_index_sequence<sizeof...(Values)>,
   }
 };
 
-////////////////
-// make_tuple //
-////////////////
-
+//------------------------------------------------------------------------------
+// make_tuple
+//------------------------------------------------------------------------------
 template <class... Values>
 auto make_tuple(Values&&... values)
     -> decltype(Tuple<uncvref_t<Values>...>(std::forward<Values>(values)...)) {
@@ -77,10 +73,9 @@ auto make_tuple(Values&&... values)
 
 namespace tuple_traits {
 
-//////////////////
-// num_elements //
-//////////////////
-
+//------------------------------------------------------------------------------
+// num_elements
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class>
 struct num_elements_impl {};
@@ -97,10 +92,9 @@ constexpr auto num_elements()
   return DETAIL_NS::num_elements_impl<T>::value;
 }
 
-//////////////////
-// element_type //
-//////////////////
-
+//------------------------------------------------------------------------------
+// element_type
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <int, class>
 struct element_type_impl {};
@@ -120,10 +114,9 @@ template <int I, class T>
 using element_type = typename DETAIL_NS::element_type_impl<I, T>::type;
 }
 
-/////////
-// get //
-/////////
-
+//------------------------------------------------------------------------------
+// get
+//------------------------------------------------------------------------------
 template <int I, class... Values,
           CONCEPT_REQUIRES((I >= 0) && (I < sizeof...(Values)))>
 decltype(auto) get(Tuple<Values...>& tuple) {

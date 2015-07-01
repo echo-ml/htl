@@ -9,24 +9,21 @@
 namespace echo {
 namespace htl {
 
-//////////////////////
-// integer_sequence //
-//////////////////////
-
+//------------------------------------------------------------------------------
+// integer_sequence
+//------------------------------------------------------------------------------
 template <class Integer, Integer... Ix>
 using integer_sequence = Tuple<htl::integral_constant<Integer, Ix>...>;
 
-////////////////////
-// index_sequence //
-////////////////////
-
+//------------------------------------------------------------------------------
+// index_sequence
+//------------------------------------------------------------------------------
 template <std::size_t... Ix>
 using index_sequence = integer_sequence<std::size_t, Ix...>;
 
-///////////////////////////
-// make_integer_sequence //
-///////////////////////////
-
+//------------------------------------------------------------------------------
+// make_integer_sequence
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class Integer, Integer Offset, Integer... Ix>
 auto make_integer_sequence_impl(std::integer_sequence<Integer, Ix...>) {
@@ -51,10 +48,9 @@ template <class Integer, Integer... Ix>
 using make_integer_sequence = decltype(DETAIL_NS::make_integer_sequence_impl(
     htl::integral_constant<Integer, Ix>()...));
 
-/////////////////////////
-// make_index_sequence //
-/////////////////////////
-
+//------------------------------------------------------------------------------
+// make_index_sequence
+//------------------------------------------------------------------------------
 template <std::size_t... Ix>
 using make_index_sequence = htl::make_integer_sequence<std::size_t, Ix...>;
 }

@@ -10,20 +10,18 @@
 namespace echo {
 namespace htl {
 
-//////////
-// head //
-//////////
-
+//------------------------------------------------------------------------------
+// head
+//------------------------------------------------------------------------------
 template <class Tuple, CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
           CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
 decltype(auto) head(Tuple&& tuple) {
   return htl::get<0>(std::forward<Tuple>(tuple));
 }
 
-///////////////////
-// make_subtuple //
-///////////////////
-
+//------------------------------------------------------------------------------
+// make_subtuple
+//------------------------------------------------------------------------------
 template <std::size_t... Indexes, class Tuple_,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple_>>()),
           CONCEPT_REQUIRES(and_c<(
@@ -51,10 +49,9 @@ auto make_subtuple(htl::integer_sequence<std::size_t, Indexes...> indexes,
       htl::get<Indexes>(std::forward<Tuple_>(tuple))...);
 }
 
-////////////
-// append //
-////////////
-
+//------------------------------------------------------------------------------
+// append
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class Value, class Tuple_>
 auto append_impl(std::index_sequence<Indexes...>, Value&& value, Tuple_&& tuple)
@@ -80,10 +77,9 @@ auto append(Value&& value, Tuple&& tuple) -> decltype(DETAIL_NS::append_impl(
       std::forward<Value>(value), std::forward<Tuple>(tuple));
 }
 
-/////////////
-// prepend //
-/////////////
-
+//------------------------------------------------------------------------------
+// prepend
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class Value, class Tuple_>
 auto prepend_impl(std::index_sequence<Indexes...>, Value&& value,
@@ -111,10 +107,9 @@ auto prepend(Value&& value, Tuple&& tuple) -> decltype(DETAIL_NS::prepend_impl(
       std::forward<Value>(value), std::forward<Tuple>(tuple));
 }
 
-//////////
-// left //
-//////////
-
+//------------------------------------------------------------------------------
+// left
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class, class>
 struct left_impl {};
@@ -141,10 +136,9 @@ auto left(Tuple&& tuple) -> copy_cv_qualifiers<
       tuple);
 }
 
-///////////
-// right //
-///////////
-
+//------------------------------------------------------------------------------
+// right
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 
 template <int, class, class>
@@ -182,10 +176,9 @@ auto right(Tuple&& tuple) -> copy_cv_qualifiers<
       htl::get<tuple_traits::num_elements<uncvref_t<Tuple>>() - N>(tuple));
 }
 
-///////////
-// slice //
-///////////
-
+//------------------------------------------------------------------------------
+// slice
+//------------------------------------------------------------------------------
 template <int I, int J, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>()),
           CONCEPT_REQUIRES(I >= 0 &&
@@ -195,10 +188,9 @@ decltype(auto) slice(Tuple&& tuple) {
   return left<J - I>(right<N - I>(std::forward<Tuple>(tuple)));
 }
 
-//////////
-// tail //
-//////////
-
+//------------------------------------------------------------------------------
+// tail
+//------------------------------------------------------------------------------
 template <class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
                            tuple_traits::num_elements<uncvref_t<Tuple>>() > 0)>
@@ -207,10 +199,9 @@ decltype(auto) tail(Tuple&& tuple) {
       std::forward<Tuple>(tuple));
 }
 
-/////////
-// map //
-/////////
-
+//------------------------------------------------------------------------------
+// map
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t I, class Functor, class... Tuples>
 auto apply_impl(Functor&& functor, Tuples&&... tuples) {
@@ -240,12 +231,10 @@ auto map(Functor&& functor, TupleFirst&& tuple_first,
       std::forward<TuplesRest>(tuples_rest)...);
 }
 
-////////////////////////
-// type_match_indexes //
-////////////////////////
-
+//------------------------------------------------------------------------------
+// type_match_indexes
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
-
 template <class, int, class, class Result>
 struct type_match_indexes_impl {
   using type = Result;
@@ -268,10 +257,9 @@ using type_match_indexes =
                                      std::index_sequence<>>::type;
 }
 
-///////////////
-// partition //
-///////////////
-
+//------------------------------------------------------------------------------
+// partition
+//------------------------------------------------------------------------------
 template <class Predicate, class Tuple,
           CONCEPT_REQUIRES(
               concept::applicable_constant_predicate<Predicate, Tuple>() &&
@@ -286,10 +274,9 @@ auto partition(const Predicate& predicate, Tuple&& tuple) {
                     make_subtuple(FalseIndexes(), std::forward<Tuple>(tuple)));
 }
 
-///////////////
-// remove_if //
-///////////////
-
+//------------------------------------------------------------------------------
+// remove_if
+//------------------------------------------------------------------------------
 template <class Predicate, class Tuple,
           CONCEPT_REQUIRES(
               concept::applicable_constant_predicate<Predicate, Tuple>() &&
@@ -301,10 +288,9 @@ auto remove_if(const Predicate& predicate, Tuple&& tuple) {
   return make_subtuple(FalseIndexes(), std::forward<Tuple>(tuple));
 }
 
-///////////////
-// left_fold //
-///////////////
-
+//------------------------------------------------------------------------------
+// left_fold
+//------------------------------------------------------------------------------
 template <class Functor, class X0, class Tuple,
           CONCEPT_REQUIRES(concept::tuple<uncvref_t<Tuple>>() &&
                            tuple_traits::num_elements<uncvref_t<Tuple>>() ==
@@ -323,10 +309,9 @@ auto left_fold(const Functor& functor, X0&& x0, Tuple&& tuple) {
                    tail(std::forward<Tuple>(tuple)));
 }
 
-/////////////
-// find_if //
-/////////////
-
+//------------------------------------------------------------------------------
+// find_if
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class Index, class Predicate, class Tuple,
           CONCEPT_REQUIRES(tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>
@@ -382,10 +367,9 @@ auto find_if(const Predicate& predicate, Tuple&& tuple) {
                                  tuple);
 }
 
-//////////////
-// count_if //
-//////////////
-
+//------------------------------------------------------------------------------
+// count_if
+//------------------------------------------------------------------------------
 template <class Predicate, class Tuple,
           CONCEPT_REQUIRES(concept::applicable_predicate<Predicate, Tuple>() &&
                            tuple_traits::num_elements<uncvref_t<Tuple>>() == 0)>

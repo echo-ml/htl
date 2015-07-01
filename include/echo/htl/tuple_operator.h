@@ -8,10 +8,9 @@
 namespace echo {
 namespace htl {
 
-//////////////////////
-// apply_comparison //
-//////////////////////
-
+//------------------------------------------------------------------------------
+// apply_comparison
+//------------------------------------------------------------------------------
 template <class Predicate, class Lhs, class Rhs,
           CONCEPT_REQUIRES(
               concept::applicable_binary_predicate<Predicate, Lhs, Rhs>() &&
@@ -29,9 +28,9 @@ auto apply_comparison(const Predicate& predicate, Lhs&& lhs, Rhs&& rhs) {
          apply_comparison(predicate, tail(lhs), tail(rhs));
 }
 
-////////////////////
-// tuple operator //
-////////////////////
+//------------------------------------------------------------------------------
+// tuple_operator
+//------------------------------------------------------------------------------
 
 #define ECHO_MAKE_STRICT_OPERATOR(SYMBOL, COMPARISON)                          \
   template <class LhsTuple, class RhsTuple,                                    \

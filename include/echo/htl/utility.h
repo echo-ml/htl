@@ -8,10 +8,9 @@
 namespace echo {
 namespace htl {
 
-////////////////////////
-// copy_cv_qualifiers //
-////////////////////////
-
+//------------------------------------------------------------------------------
+// copy_cv_qualifiers
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class A, class B>
 struct copy_cv_qualifiers_impl {

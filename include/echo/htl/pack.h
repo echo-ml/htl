@@ -11,10 +11,9 @@ namespace echo {
 // unwanted ADL it uses a separate and minimal namespace
 namespace empty_base_class_namespace {
 
-//////////////
-// PackBase //
-//////////////
-
+//------------------------------------------------------------------------------
+// PackBase
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 
 template <class Tag, class Value, bool IsValueEmpty>
@@ -53,19 +52,17 @@ struct PackBase<Tag, Value, false> {
 };
 }
 
-//////////
-// Pack //
-//////////
-
+//------------------------------------------------------------------------------
+// Pack
+//------------------------------------------------------------------------------
 template <class Tag, class Value = Tag>
 struct Pack : DETAIL_NS::PackBase<Tag, Value, std::is_empty<Value>::value> {
   using DETAIL_NS::PackBase<Tag, Value, std::is_empty<Value>::value>::PackBase;
 };
 
-////////////
-// unpack //
-////////////
-
+//------------------------------------------------------------------------------
+// unpack
+//------------------------------------------------------------------------------
 template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>& pack) {
   return pack.value();

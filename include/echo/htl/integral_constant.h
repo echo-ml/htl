@@ -6,10 +6,9 @@
 namespace echo {
 namespace htl {
 
-///////////////////////
-// integral_constant //
-///////////////////////
-
+//------------------------------------------------------------------------------
+// integral_constant
+//------------------------------------------------------------------------------
 template <class T, T Value>
 struct integral_constant : std::integral_constant<T, Value> {};
 

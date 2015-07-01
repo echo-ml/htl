@@ -9,10 +9,9 @@ namespace echo {
 namespace htl {
 namespace concept {
 
-///////////
-// tuple //
-///////////
-
+//------------------------------------------------------------------------------
+// tuple
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class>
 struct tuple_impl {
@@ -30,19 +29,17 @@ constexpr bool tuple() {
   return DETAIL_NS::tuple_impl<T>::value;
 }
 
-/////////////
-// boolean //
-/////////////
-
+//------------------------------------------------------------------------------
+// boolean
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool boolean() {
   return std::is_convertible<T, bool>::value;
 }
 
-///////////////////////////
-// boolean_true_constant //
-///////////////////////////
-
+//------------------------------------------------------------------------------
+// boolean_true_constant
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct BooleanTrueConstant : Concept {
   template <class T>
@@ -55,10 +52,9 @@ constexpr bool boolean_true_constant() {
   return models<DETAIL_NS::BooleanTrueConstant, T>();
 }
 
-////////////////////////////
-// boolean_false_constant //
-////////////////////////////
-
+//------------------------------------------------------------------------------
+// boolean_false_constant
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct BooleanFalseConstant : Concept {
   template <class T>
@@ -71,19 +67,17 @@ constexpr bool boolean_false_constant() {
   return models<DETAIL_NS::BooleanFalseConstant, T>();
 }
 
-//////////////////////
-// boolean_constant //
-//////////////////////
-
+//------------------------------------------------------------------------------
+// boolean_constant
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool boolean_constant() {
   return boolean_true_constant<T>() || boolean_false_constant<T>();
 }
 
-//////////////
-// mappable //
-//////////////
-
+//------------------------------------------------------------------------------
+// mappable
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t Index, class Functor, class... Tuples>
 auto apply_map_element(Functor&& functor, Tuples&&... tuples)
@@ -118,10 +112,9 @@ constexpr bool mappable() {
   return models<DETAIL_NS::Mappable, Functor, Tuples...>();
 }
 
-//////////////////////////
-// applicable_predicate //
-//////////////////////////
-
+//------------------------------------------------------------------------------
+// applicable_predicate
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class>
 struct ApplicablePredicateImpl {};
@@ -148,10 +141,9 @@ constexpr bool applicable_predicate() {
   return models<DETAIL_NS::ApplicablePredicate, Predicate, Tuple>();
 }
 
-/////////////////////////////////
-// applicable_binary_predicate //
-/////////////////////////////////
-
+//------------------------------------------------------------------------------
+// applicable_binary_predicate
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class Predicate, class TupleLhs,
           class TupleRhs>
@@ -187,10 +179,9 @@ constexpr bool applicable_binary_predicate() {
                 TupleRhs>();
 }
 
-///////////////////////////////////
-// applicable_constant_predicate //
-///////////////////////////////////
-
+//------------------------------------------------------------------------------
+// applicable_constant_predicate
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class Predicate, class Tuple>
 auto applicable_constant_predicate_impl(std::index_sequence<Indexes...>,
@@ -216,10 +207,9 @@ constexpr bool applicable_constant_predicate() {
   return models<DETAIL_NS::ApplicableConstantPredicate, Predicate, Tuple>();
 }
 
-///////////////////
-// left_foldable //
-///////////////////
-
+//------------------------------------------------------------------------------
+// left_foldable
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <int I, int N>
 struct LeftFoldableImpl : Concept {
