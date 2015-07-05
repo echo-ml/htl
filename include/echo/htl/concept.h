@@ -2,8 +2,8 @@
 
 #define DETAIL_NS detail_concept
 
-#include <echo/htl/tuple.h>
 #include <echo/concept.h>
+#include <echo/htl/tuple.h>
 
 namespace echo {
 namespace htl {

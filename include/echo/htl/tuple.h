@@ -2,6 +2,7 @@
 
 #define DETAIL_NS detail_tuple
 
+#include <echo/concept.h>
 #include <echo/htl/pack.h>
 #include <echo/htl/utility.h>
 #include <echo/variadic_operator.h>
