@@ -15,7 +15,6 @@ namespace empty_base_class_namespace {
 // PackBase
 //------------------------------------------------------------------------------
 namespace DETAIL_NS {
-
 template <class Tag, class Value, bool IsValueEmpty>
 struct PackBase {};
 
@@ -28,9 +27,11 @@ struct PackBase<Tag, Value, true> {
             CONCEPT_REQUIRES(std::is_constructible<Value, OtherValue>::value)>
   PackBase(OtherValue&& other_value) {}
 
-  Value& value() & { return reinterpret_cast<Value&>(*this); }
-  const Value& value() const & { return reinterpret_cast<const Value&>(*this); }
-  Value&& value() && { return reinterpret_cast<Value&&>(*this); }
+  Value& detail_pack_value() & { return reinterpret_cast<Value&>(*this); }
+  const Value& detail_pack_value() const & {
+    return reinterpret_cast<const Value&>(*this);
+  }
+  Value&& detail_pack_value() && { return reinterpret_cast<Value&&>(*this); }
 };
 
 template <class Tag, class Value>
@@ -41,14 +42,14 @@ struct PackBase<Tag, Value, false> {
   template <class OtherValue,
             CONCEPT_REQUIRES(std::is_constructible<Value, OtherValue>::value)>
   PackBase(OtherValue&& other_value)
-      : _value(std::forward<OtherValue>(other_value)) {}
+      : _detail_pack_value(std::forward<OtherValue>(other_value)) {}
 
-  auto& value() & { return _value; }
-  auto& value() const & { return _value; }
-  auto&& value() && { return std::move(_value); }
+  auto& detail_pack_value() & { return _detail_pack_value; }
+  auto& detail_pack_value() const & { return _detail_pack_value; }
+  auto&& detail_pack_value() && { return std::move(_detail_pack_value); }
 
  private:
-  Value _value;
+  Value _detail_pack_value;
 };
 }
 
@@ -65,17 +66,17 @@ struct Pack : DETAIL_NS::PackBase<Tag, Value, std::is_empty<Value>::value> {
 //------------------------------------------------------------------------------
 template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>& pack) {
-  return pack.value();
+  return pack.detail_pack_value();
 }
 
 template <class Tag, class Value>
 decltype(auto) unpack(const Pack<Tag, Value>& pack) {
-  return pack.value();
+  return pack.detail_pack_value();
 }
 
 template <class Tag, class Value>
 decltype(auto) unpack(Pack<Tag, Value>&& pack) {
-  return std::move(pack).value();
+  return std::move(pack).detail_pack_value();
 }
 }
 
