@@ -5,7 +5,6 @@
 
 namespace echo {
 namespace htl {
-
 //------------------------------------------------------------------------------
 // integral_constant
 //------------------------------------------------------------------------------
@@ -79,5 +78,17 @@ ECHO_DEFINE_UNARY_OPERATOR(-)
 ECHO_DEFINE_UNARY_OPERATOR(+)
 ECHO_DEFINE_UNARY_OPERATOR(!)
 #undef ECHO_DEFINE_UNARY_OPERATOR
+
+template <class T, T Value1, T Value2>
+auto min(htl::integral_constant<T, Value1>, htl::integral_constant<T, Value2>)
+    -> htl::integral_constant<T, (Value1 < Value2 ? Value1 : Value2)> {
+  return {};
+}
+
+template <class T, T Value1, T Value2>
+auto max(htl::integral_constant<T, Value1>, htl::integral_constant<T, Value2>)
+    -> htl::integral_constant<T, (Value1 < Value2 ? Value2 : Value1)> {
+  return {};
+}
 }
 }
