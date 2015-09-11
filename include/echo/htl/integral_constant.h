@@ -2,6 +2,7 @@
 
 #include <echo/concept.h>
 #include <type_traits>
+#include <algorithm>
 
 namespace echo {
 namespace htl {
@@ -85,10 +86,30 @@ auto min(htl::integral_constant<T, Value1>, htl::integral_constant<T, Value2>)
   return {};
 }
 
+template <class T, T Value1>
+T min(htl::integral_constant<T, Value1>, T y) {
+  return std::min(Value1, y);
+}
+
+template <class T, T Value1>
+T min(T x, htl::integral_constant<T, Value1>) {
+  return std::min(x, Value1);
+}
+
 template <class T, T Value1, T Value2>
 auto max(htl::integral_constant<T, Value1>, htl::integral_constant<T, Value2>)
     -> htl::integral_constant<T, (Value1 < Value2 ? Value2 : Value1)> {
   return {};
+}
+
+template <class T, T Value1>
+T max(htl::integral_constant<T, Value1>, T y) {
+  return std::max(Value1, y);
+}
+
+template <class T, T Value1>
+T max(T x, htl::integral_constant<T, Value1>) {
+  return std::max(x, Value1);
 }
 }
 }
